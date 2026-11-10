@@ -1,0 +1,114 @@
+---
+title: "Load AB-Bind database"
+format: html
+engine: knitr
+---
+
+## Introduction
+
+This document downloads the AB-Bind database into `_raw/`.
+The dataset contains 32 antibody-antigen complex structures, the
+experimental binding measurements (`AB-Bind_experimental_data.csv`)
+and computational binding energy estimates (`ABbind_compt_data.zip`).
+
+## Setup
+
+```{r}
+#| label: setup
+library("tidyverse")
+library("curl")
+library("here")
+```
+
+## Download the data
+
+```{r}
+#| label: download-data
+# Download the repository as a zip from GitHub into a temp file
+repo_zip_url <- str_c(
+  "https://codeload.github.com/sarahsirin/AB-Bind-Database/",
+  "zip/refs/heads/master"
+)
+tmp_zip <- tempfile(fileext = ".zip")
+curl_download(url = repo_zip_url, destfile = tmp_zip)
+
+# Unpack the zip in a temp dir
+tmp_dir <- tempfile()
+dir.create(tmp_dir)
+unzip(tmp_zip, exdir = tmp_dir)
+repo_dir <- setdiff(
+  list.dirs(tmp_dir, recursive = FALSE),
+  file.path(tmp_dir, "__MACOSX")
+)
+
+# Copy the repository files into _raw/ and unzip the computational data
+raw_dir <- here("_raw")
+dir.create(raw_dir, showWarnings = FALSE)
+file.copy(
+  list.files(repo_dir, full.names = TRUE),
+  raw_dir,
+  overwrite = TRUE
+)
+unzip(here("_raw", "ABbind_compt_data.zip"), exdir = raw_dir)
+
+# The zip carries macOS metadata folders, drop those
+unlink(file.path(raw_dir, "__MACOSX"), recursive = TRUE)
+
+# Overview of data in _raw/
+tibble(file = list.files(raw_dir, recursive = TRUE))
+```
+
+## Experimental binding data
+
+Each mutation (possibly multiple positions changed) has a row with the measured
+binding free energy change `ddG(kcal/mol)` plus pdb entry and assay metadata
+
+```{r}
+#| label: experimental-data
+ab_bind <- read_csv(
+  here("_raw", "AB-Bind_experimental_data.csv"),
+  show_col_types = FALSE
+)
+
+glimpse(ab_bind)
+slice_head(ab_bind, n = 6)
+```
+
+## Computational binding data
+
+The unpacked zip holds one `.dat` file per method, semicolon-delimited
+with the columns `pdb`, `mutation`, `expt` and `comp`
+
+```{r}
+#| label: computational-data
+# Read all .dat files
+compt_files <- list.files(
+  here("_raw", "ABbind_compt_data"),
+  pattern = "\\.dat$",
+  full.names = TRUE
+)
+
+compt_data <- compt_files |>
+  set_names(~ str_remove(basename(.x), "\\.dat$")) |>
+  map_dfr(
+    ~ read_delim(
+      .x,
+      delim = ";",
+      comment = "#",
+      trim_ws = TRUE,
+      col_names = c("pdb", "mutation", "expt", "comp"),
+      col_types = cols(
+        pdb = col_character(),
+        mutation = col_character(),
+        expt = col_double(),
+        comp = col_double()
+      ),
+      show_col_types = FALSE
+    ),
+    .id = "method"
+  )
+
+glimpse(compt_data)
+count(compt_data, method)
+slice_head(compt_data, n = 6)
+```
