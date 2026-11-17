@@ -3,3 +3,26 @@ title: "03_augment"
 format: html
 ---
 
+## Setup
+
+```{r}
+library("tidyverse")
+library("here")
+```
+
+## Load data
+
+TEMPORARY: reads the 01_load output until 02_clean is ready.
+
+```{r}
+ab_bind <- read_csv(here("data", "01_dat_load_experimental.csv"))
+```
+
+## Mutation features
+
+Count how many mutations each variant has (number of commas + 1).
+
+```{r}
+ab_bind_aug <- ab_bind |>
+  mutate(n_mutations = str_count(Mutation, pattern = ",") + 1)
+```
