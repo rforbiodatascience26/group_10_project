@@ -20,10 +20,11 @@ ab_bind <- read_csv(here("data", "01_dat_load_experimental.csv"))
 
 ## Mutation features
 
-Count how many mutations each variant has (number of commas + 1).
+Add mutation features: the number of mutations per variant (commas + 1), whether the variant is a single or multiple mutant, and whether a single mutation changes the amino acid to alanine (A), for the alanine-scan analysis.
 
 ```{r}
 ab_bind_aug <- ab_bind |>
   mutate(n_mutations = str_count(Mutation, pattern = ",") + 1,
-         mutation_type = if_else(n_mutations == 1, "single", "multiple"))
+         mutation_type = if_else(n_mutations == 1, "single", "multiple"),
+         to_alanine = mutation_type == "single" & str_ends(Mutation, "A"))
 ```
