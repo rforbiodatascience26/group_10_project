@@ -24,5 +24,6 @@ Count how many mutations each variant has (number of commas + 1).
 
 ```{r}
 ab_bind_aug <- ab_bind |>
-  mutate(n_mutations = str_count(Mutation, pattern = ",") + 1)
+  mutate(n_mutations = str_count(Mutation, pattern = ",") + 1,
+         mutation_type = if_else(n_mutations == 1, "single", "multiple"))
 ```
