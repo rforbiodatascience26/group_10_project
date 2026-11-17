@@ -4,13 +4,209 @@ author: "Luis Sebastian Galán, Laura Grenaa Jensen, Taniya Dey and hota Kanishk
 format: html
 ---
 
+## Setup
+
+```{r}
+#| label: setup
+library("tidyverse")
+library("here")
+```
+
 ## Load dataset
 
 ```{r}
+ab_bind = read_csv(here('data/01_dat_load_experimental.csv')) |>
+  select(
+    pdb = `#PDB`,
+    partners = `Partners(A_B)`,
+    mutation = Mutation,
+    ddg = `ddG(kcal/mol)`,
+    pdb_ph = `PDB pH`,
+    assay_name = `Assay Name`,
+    assay_ph = `Assay pH`
+  )
 
+
+ab_bind
+```
+
+## Drop rows with multiple mutations, insertions or deletions
+In our analysis we will focus on single point mutations for the sake of simplicity.
+Point mutations always consist of 
+1) a single chain letter
+2) a comma separator
+3) a single-letter uppercase amino acid code
+4) one or more digits specifying the position
+5) a single-letter uppercase amino acid code
+which can be matched with a simple regex:
+
+```{r}
+ab_bind <- ab_bind |>
+  filter(str_detect(mutation, "^[A-Za-z]:[A-Z][0-9]+[A-Z]$"))
+
+ab_bind
 ```
 
 
+## Drop rows that are not antibody-antigen
 
+In the paper they note that chains of antibody-antigen systems were named with
+'H' for the heavy chain and 'L' for the light chain. We therefore assume that any
+PDB with 'H' and 'L' as chain names is antibody-antigen. For the remaining
+PDBs, we manually review them.
+```{r}
+pdb_partners <- ab_bind |>
+  distinct(pdb, partners)
 
+pdb_hl <- pdb_partners |>
+  filter(str_detect(partners, "H"), str_detect(partners, "L"))
 
+pdb_no_hl <- pdb_partners |>
+  anti_join(pdb_hl, by = "pdb")
+
+pdb_no_hl
+```
+After manually visiting these PDB entries on https://rcsb.org we find that the following do not contain antibody-antigen structures:
+- 1AK4
+- 1FFW
+- 1JTG
+- 1KTZ
+- 3K2M
+- HM_1KTZ
+
+These PDBs contain only constant regions of antibodies which do not contain the CDR regions that form the typical binding interface of an antibody, so we also exclude these:
+
+These PDBs contain antibodies, but the binding interface is at the Fc region and not at the CDR region which is the region that determines antigen binding:
+- 1T83
+- 3WJJ
+
+This leaves us with two PDBs: 3NPS and 1DVF which both contain canonical antibody-antigen complexes
+
+PDB 3NPS:
+heavy: chain B
+light: chain C
+antigen: chain A
+
+Note that PDB 1DVF contains an _antiidiotopic_ antibody, which means it's an antibody that binds to another antibody.
+For this structure, we both add a row where antibody 1 is the antibody and antibody 2 is treated as the antigen and vice versa.
+In this one, chain C and D are one antibody and chain A and B are one antibody
+heavy 1: chain B
+light 1: chain A
+heavy 2: chain D
+light 2: chain C
+
+```{r}
+ab_bind_hl <- ab_bind |>
+  filter(pdb %in% pull(pdb_hl, pdb)) |>
+  mutate(heavy = 'H', light = 'L')
+
+ab_bind_3nps <- ab_bind |>
+  filter(pdb == "3NPS") |>
+  mutate(heavy = 'B', light = 'C')
+
+ab_bind_1dvf_1 <- ab_bind |>
+  filter(pdb == "1DVF") |>
+  mutate(heavy = 'B', light = 'A')
+
+ab_bind_1dvf_2 <- ab_bind |>
+  filter(pdb == "1DVF") |>
+  mutate(heavy = 'D', light = 'C')
+
+ab_bind_ab <- bind_rows(
+  ab_bind_hl,
+  ab_bind_3nps,
+  ab_bind_1dvf_1,
+  ab_bind_1dvf_2
+)
+ab_bind_ab
+```
+
+## Rename light and heavy chains
+```{r}
+ab_bind_ab <- ab_bind_ab |>
+  mutate(
+    mutation = str_replace_all(mutation, str_c("(^|,)", heavy, ":"), "\\1H:"),
+    mutation = str_replace_all(mutation, str_c("(^|,)", light, ":"), "\\1L:"),
+    partners = str_replace_all(partners, heavy, "H"),
+    partners = str_replace_all(partners, light, "L"),
+    partners = str_replace_all(partners, "LH", "HL"),
+    antigen_chains = str_remove(partners, "HL_|_HL")
+  ) |>
+  select(!c(heavy, light, partners))
+
+ab_bind_ab
+```
+
+## Join with computational data
+Some of the computational methods have duplicate predictions, so we take the mean in those cases
+```{r}
+comp <- read_csv(
+  here("data", "01_dat_load_computational.csv"),
+  show_col_types = FALSE
+) |>
+  filter(pdb %in% pull(ab_bind_ab, pdb)) |>
+  mutate(
+    method = case_when(
+      method == "bASA_all_side" ~ "basa_all_side",
+      method == "d_studio_expt_comp" ~ "d_studio",
+      method == "dDfire" ~ "ddfire",
+      method == "dfire" ~ "dfire",
+      method == "foldX_IE" ~ "foldx",
+      method == "rosetta_expt_comp" ~ "rosetta",
+      method == "statium_expt_comp" ~ "statium"
+    )
+  ) |>
+  summarise(comp = mean(comp), .by = c(method, pdb, mutation)) |>
+  pivot_wider(names_from = method, values_from = comp) |>
+  rename(
+    d_studio_ddg = d_studio,
+    ddfire_ddg = ddfire,
+    dfire_ddg = dfire,
+    foldx_ddg = foldx,
+    rosetta_ddg = rosetta,
+    statium_ddg = statium
+  )
+
+ab_bind_ab <- ab_bind_ab |>
+  left_join(comp, by = c("pdb", "mutation"))
+
+ab_bind_ab
+```
+
+## Split mutations into columns
+```{r}
+ab_bind_ab <- ab_bind_ab |>
+  mutate(
+    mut_chain = str_sub(mutation, 1, 1),
+    mut_position = str_sub(mutation, 4, -2),
+    mut_from = str_sub(mutation, 3, 3),
+    mut_to = str_sub(mutation, -1, -1)
+  ) |>
+  select(-mutation)
+
+ab_bind_ab
+```
+
+## Reorder columns
+```{r}
+ab_bind_ab <- ab_bind_ab |>
+  select(
+    pdb,
+    starts_with("mut_"),
+    ddg,
+    ends_with("_ddg"),
+    basa_all_side,
+    assay_ph,
+    pdb_ph,
+    everything(),
+  )
+
+ab_bind_ab
+```
+## Write cleaned csv
+```{r}
+write_csv(
+  x = ab_bind_ab,
+  file = here("data", "02_dat_clean.csv")
+)
+```
