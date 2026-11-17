@@ -13,7 +13,7 @@ here::i_am("R/00_all.qmd")
 project_files <- c(
   "01_load.qmd",
   "02_clean.qmd",
-  "03_argument.qmd",
+  "03_augment.qmd",
   "04_describe.qmd",
   "05_analysis_1.qmd",
   "05_analysis_2.qmd"
