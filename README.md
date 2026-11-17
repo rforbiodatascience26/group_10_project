@@ -5,7 +5,7 @@
 | Name | Student ID | GitHub username |
 | ---- | ---------- | --------------- |
 | Luis Sebastian Galán | s235397 | [Username] |
-| Laura Grenaa Jensen | s235427 | lauragrenaa |
+| Laura Grenaa Jensen | s235427 | lauragjensen |
 | Taniya Dey | s263756   | taniyadey0229-rgb |
 | Thota Kanishka Rao | s263780 | [Username] |
 
