@@ -6,7 +6,7 @@
 | ---- | ---------- | --------------- |
 | Luis Sebastian Galán | s235397 | [Username] |
 | Laura Grenaa Jensen | s235427 | lauragrenaa |
-| Taniya Dey | s263756   | [Username] |
+| Taniya Dey | s263756   | taniyadey0229-rgb |
 | Thota Kanishka Rao | s263780 | [Username] |
 
 ## Group 10: Exploring Mutation Effects on Protein Binding
