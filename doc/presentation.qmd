@@ -1,0 +1,15 @@
+---
+title: "Title of our project (change this)"
+author: "Luis Sebastian Galán, Laura Grenaa Jensen, Taniya Dey and hota Kanishka Rao"
+format: revealjs
+---
+
+## Getting up
+
+-   Turn off alarm
+-   Get out of bed
+
+## Going to sleep
+
+-   Get in bed
+-   Count sheep

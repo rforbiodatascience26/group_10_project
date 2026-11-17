@@ -1,5 +1,16 @@
 ---
 title: "02_clean"
+author: "Luis Sebastian Galán, Laura Grenaa Jensen, Taniya Dey and hota Kanishka Rao"
 format: html
 ---
+
+## Load dataset
+
+```{r}
+
+```
+
+
+
+
 

@@ -1,5 +1,30 @@
 ---
-title: "00_all"
+title: "Run all analyses in one go"
+author: "Luis Sebastian Galán, Laura Grenaa Jensen, Taniya Dey and hota Kanishka Rao"
 format: html
 ---
 
+We use this file to run the whole project in one go. First, we load, clean and prepare the data. Then we describe the dataset and run our two analyses.
+
+```{r}
+here::i_am("R/00_all.qmd")
+
+# List the files in the order we want to run them.
+project_files <- c(
+  "01_load.qmd",
+  "02_clean.qmd",
+  "03_argument.qmd",
+  "04_describe.qmd",
+  "05_analysis_1.qmd",
+  "05_analysis_2.qmd"
+)
+
+# Render each file and wait for it to finish before starting the next.
+purrr::walk(project_files, function(project_file) {
+  quarto::quarto_render(
+    input = here::here("R", project_file),
+    quarto_args = c("--output-dir", "../results"),
+    as_job = FALSE
+  )
+})
+```
