@@ -1,5 +1,6 @@
 ---
-title: "03_augment"
+title: "Data Augmentation: Mutation Features"
+author: "Luis Sebastian Galán, Laura Grenaa Jensen, Taniya Dey and Thota Kanishka Rao"
 format: html
 ---
 
@@ -12,19 +13,40 @@ library("here")
 
 ## Load data
 
-TEMPORARY: reads the 01_load output until 02_clean is ready.
+We load the cleaned dataset from the previous step.
 
 ```{r}
-ab_bind <- read_csv(here("data", "01_dat_load_experimental.csv"))
+dat_clean <- read_csv(here("data", "02_dat_clean.csv"))
 ```
+
 
 ## Mutation features
 
-Add mutation features: the number of mutations per variant (commas + 1), whether the variant is a single or multiple mutant, and whether a single mutation changes the amino acid to alanine (A), for the alanine-scan analysis.
+We add `mutation_category` to show whether each mutation is on the antibody heavy chain, antibody light chain, or antigen. We use `H` for the heavy chain and `L` for the light chain. For antigen mutations, we check whether `mut_chain` is listed in `antigen_chains`. For example, if `antigen_chains` is `VW`, a mutation on either `V` or `W` is classified as antigen.
 
 ```{r}
-ab_bind_aug <- ab_bind |>
-  mutate(n_mutations = str_count(Mutation, pattern = ",") + 1,
-         mutation_type = if_else(n_mutations == 1, "single", "multiple"),
-         to_alanine = mutation_type == "single" & str_ends(Mutation, "A"))
+dat_aug <- dat_clean %>%
+  mutate(
+    # Check which chain the mutation is on
+    mutation_category = case_when(
+      str_detect(antigen_chains, fixed(mut_chain)) ~ "antigen",
+      mut_chain == "H" ~ "ab_heavy",
+      mut_chain == "L" ~ "ab_light",
+      TRUE ~ NA_character_
+    ),
+    # Store the three categories as factor levels
+    mutation_category = factor(
+      mutation_category,
+      levels = c("ab_heavy", "ab_light", "antigen")
+    )
+  )
+
+# Count the rows in each category and check for any NA values
+dat_aug %>% count(mutation_category)
+```
+
+## Save augmented data
+
+```{r}
+write_csv(dat_aug, here("data", "03_dat_aug.csv"))
 ```

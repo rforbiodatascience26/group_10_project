@@ -1,6 +1,6 @@
 ---
 title: "02_clean"
-author: "Luis Sebastian Galán, Laura Grenaa Jensen, Taniya Dey and hota Kanishka Rao"
+author: "Luis Sebastian Galán, Laura Grenaa Jensen, Taniya Dey and Thota Kanishka Rao"
 format: html
 ---
 

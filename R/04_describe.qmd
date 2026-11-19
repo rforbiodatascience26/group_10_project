@@ -1,5 +1,70 @@
 ---
-title: "04_describe"
+title: "Describing the Mutation Dataset"
+author: "Luis Sebastian Galán, Laura Grenaa Jensen, Taniya Dey and Thota Kanishka Rao"
 format: html
 ---
 
+## Setup
+
+```{r}
+library("tidyverse")
+library("here")
+```
+
+## Load data
+
+We load the augmented dataset from the previous step. We use
+`mutation_category` to group mutations by where they are in the complex.
+
+```{r}
+dat_aug <- read_csv(
+  here("data", "03_dat_aug.csv"),
+  col_types = cols(
+    mutation_category = col_factor(
+      levels = c("ab_heavy", "ab_light", "antigen")
+    )
+  )
+)
+```
+
+## Dataset overview
+
+We first count the number of experimental ΔΔG measurements, unique
+variants, and complexes. We count measurements and variants separately
+because the same variant can be measured more than once. We also count
+how many variants have one substitution or multiple substitutions, and
+how many measurements have values for both assay pH and PDB pH.
+
+For single-point measurements, we show the number and percentage on
+the antibody heavy chain, antibody light chain, and antigen. If some
+measurements have no chain category, we include them as `Unknown` and
+keep them in the total used to calculate the percentages.
+
+## Mutations to alanine vs. other amino acids
+
+We compare single-point mutations to alanine with mutations to any other
+amino acid. The first panel shows the experimental ΔΔG, followed by one
+panel for each computational method. We use the same set of variants
+across panels where possible and show the number of measurements in each
+group so we can see when the available data differ between panels.
+
+We add a small boxplot inside each violin and a dashed line at ΔΔG = 0.
+For groups with only a few measurements, we show the individual points
+so each value is visible.
+
+## Experimental ΔΔG by chain
+
+We repeat the alanine comparison using experimental ΔΔG only, with
+separate panels for the heavy chain, light chain, and antigen. Each
+panel shows the distributions for mutations to alanine and mutations
+to other amino acids. We use the same ΔΔG scale across panels so we can
+compare the distributions between chains.
+
+## Alanine mutation counts by assay pH
+
+For single-point mutations to alanine, we count the measurements at
+low and high assay pH for each starting amino acid. For example,
+W → A is counted under W. We state the pH cutoff alongside the table
+and report how many measurements are missing assay pH. This lets us
+see which starting amino acids have enough measurements in both pH
+groups for a later comparison.
