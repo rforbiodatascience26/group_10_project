@@ -1,5 +1,125 @@
 ---
-title: "05_analysis_1"
+title: "Analysis 1: How well do computational methods predict experimental ΔΔG?"
+author: "Luis Sebastian Galán, Laura Grenaa Jensen, Taniya Dey and Thota Kanishka Rao"
 format: html
 ---
 
+## Setup
+
+```{r}
+library("tidyverse")
+library("here")
+library("broom")
+```
+
+## Load data
+
+We load the augmented dataset and keep only variants that have a
+prediction from all six computational methods, so every method is
+compared on the same variants.
+
+```{r}
+dat_aug <- read_csv(here("data", "03_dat_aug.csv"))
+
+dat_pred <- dat_aug |>
+  drop_na(ends_with("_ddg")) |>
+  pivot_longer(
+    cols = ends_with("_ddg"),
+    names_to = "method",
+    values_to = "predicted_ddg"
+  ) |>
+  mutate(method = str_remove(method, "_ddg"))
+
+dat_pred |>
+  count(method)
+```
+
+## Predicted vs. experimental ΔΔG
+
+Each point is one mutation. If a method predicted perfectly, all points
+would lie on a straight line. The blue line is a linear fit.
+
+```{r}
+#| fig-width: 10
+#| fig-height: 6
+dat_pred |>
+  ggplot(aes(x = predicted_ddg, y = ddg)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", formula = y ~ x) +
+  facet_wrap(~ method, scales = "free_x") +
+  labs(
+    x = "Predicted ΔΔG",
+    y = "Experimental ΔΔG (kcal/mol)",
+    title = "Predicted vs. experimental ΔΔG for each computational method"
+  ) +
+  theme_minimal()
+```
+
+## One linear model per method
+
+We fit one linear model per method, `ddg ~ predicted_ddg`, using
+`nest()` and `map()`. From each model we take the R squared (how much of
+the variation in experimental ΔΔG the method explains) and the slope with
+its p-value. We also compute the Spearman correlation, which is less
+sensitive to the extreme values that some methods produce.
+
+```{r}
+models <- dat_pred |>
+  group_by(method) |>
+  nest() |>
+  mutate(
+    model = map(data, ~ lm(ddg ~ predicted_ddg, data = .x)),
+    glance = map(model, glance),
+    tidy = map(model, tidy),
+    spearman = map_dbl(
+      data,
+      ~ cor(.x$ddg, .x$predicted_ddg, method = "spearman")
+    )
+  )
+
+model_summary <- models |>
+  unnest(glance) |>
+  select(method, r_squared = r.squared, spearman) |>
+  left_join(
+    models |>
+      unnest(tidy) |>
+      filter(term == "predicted_ddg") |>
+      select(method, slope = estimate, p_value = p.value),
+    by = "method"
+  ) |>
+  ungroup() |>
+  arrange(desc(r_squared))
+
+model_summary
+```
+
+## Comparing the methods
+
+```{r}
+#| fig-width: 7
+#| fig-height: 4
+model_summary |>
+  ggplot(aes(x = r_squared, y = fct_reorder(method, r_squared))) +
+  geom_col() +
+  geom_text(aes(label = round(r_squared, 2)), hjust = -0.2) +
+    scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
+  labs(
+    x = "R squared (variation in experimental ΔΔG explained)",
+    y = NULL,
+    title = "How well each method predicts experimental ΔΔG"
+  ) +
+  theme_minimal()
+```
+
+## Conclusion
+
+All six methods have a positive and significant slope, so higher
+predicted ΔΔG goes with higher experimental ΔΔG. But every method explains
+less than 8% of the variation in experimental ΔΔG (R squared below 0.08).
+FoldX and Discovery Studio (d_studio) predict best, with the highest
+R squared and Spearman correlation. The statistical potentials (dfire,
+ddfire) explain the least.
+
+Note that many experimental ΔΔG values sit at exactly 8 kcal/mol. These
+look like a cap used for mutations where binding was lost completely,
+which limits how well any method can fit them.
