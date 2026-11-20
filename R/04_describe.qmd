@@ -31,14 +31,33 @@ dat_aug <- read_csv(
 
 We first count the number of experimental ΔΔG measurements, unique
 variants, and complexes. We count measurements and variants separately
-because the same variant can be measured more than once. We also count
-how many variants have one substitution or multiple substitutions, and
-how many measurements have values for both assay pH and PDB pH.
+because the same variant can be measured more than once. All rows are
+single-point mutations, because 02_clean removed multiple mutations,
+insertions and deletions. We also count how many measurements have values
+for both assay pH and PDB pH.
+
+```{r}
+dat_aug |>
+  summarise(
+    n_measurements = n(),
+    n_variants = n_distinct(pdb, mut_chain, mut_position, mut_from, mut_to),
+    n_complexes = n_distinct(pdb),
+    n_both_ph = sum(!is.na(assay_ph) & !is.na(pdb_ph) & pdb_ph != "na")
+  )
+```
 
 For single-point measurements, we show the number and percentage on
 the antibody heavy chain, antibody light chain, and antigen. If some
 measurements have no chain category, we include them as `Unknown` and
 keep them in the total used to calculate the percentages.
+
+```{r}
+dat_aug |>
+  mutate(mutation_category = fct_na_value_to_level(mutation_category,
+                                                   level = "Unknown")) |>
+  count(mutation_category) |>
+  mutate(percent = round(100 * n / sum(n), 1))
+```
 
 ## Mutations to alanine vs. other amino acids
 
@@ -49,8 +68,54 @@ across panels where possible and show the number of measurements in each
 group so we can see when the available data differ between panels.
 
 We add a small boxplot inside each violin and a dashed line at ΔΔG = 0.
-For groups with only a few measurements, we show the individual points
-so each value is visible.
+All groups have more than 200 measurements, so we do not need to show
+individual points.
+
+```{r}
+#| fig-width: 10
+#| fig-height: 7
+# Keep only variants that have a prediction from every method,
+# so all panels show the same set of variants
+ddg_long <- dat_aug |>
+  drop_na(ends_with("_ddg")) |>
+  select(pdb, mut_chain, mut_position, mut_from, mut_to, to_alanine,
+         experimental = ddg, ends_with("_ddg")) |>
+  pivot_longer(
+    cols = c(experimental, ends_with("_ddg")),
+    names_to = "method",
+    values_to = "ddg"
+  ) |>
+  drop_na(ddg) |>
+  mutate(
+    method = str_remove(method, "_ddg"),
+    method = fct_relevel(method, "experimental"),
+    target = if_else(to_alanine, "to alanine", "to other")
+  )
+
+ddg_counts <- ddg_long |>
+  count(method, target)
+
+ddg_long |>
+  ggplot(aes(x = target, y = ddg, fill = target)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_violin(alpha = 0.5) +
+  geom_boxplot(width = 0.15, outlier.shape = NA) +
+  geom_text(
+    data = ddg_counts,
+    aes(label = str_c("n = ", n), y = Inf),
+    vjust = 1.5,
+    size = 3
+  ) +
+  facet_wrap(~ method, scales = "free_y") +
+  labs(
+    x = NULL,
+    y = "ΔΔG (kcal/mol)",
+    title = "ΔΔG for mutations to alanine vs. other amino acids",
+    subtitle = "Experimental values and six computational predictions"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
 
 ## Experimental ΔΔG by chain
 
@@ -60,6 +125,35 @@ panel shows the distributions for mutations to alanine and mutations
 to other amino acids. We use the same ΔΔG scale across panels so we can
 compare the distributions between chains.
 
+```{r}
+#| fig-width: 9
+#| fig-height: 4
+chain_counts <- dat_aug |>
+  mutate(target = if_else(to_alanine, "to alanine", "to other")) |>
+  count(mutation_category, target)
+
+dat_aug |>
+  mutate(target = if_else(to_alanine, "to alanine", "to other")) |>
+  ggplot(aes(x = target, y = ddg, fill = target)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_violin(alpha = 0.5) +
+  geom_boxplot(width = 0.15, outlier.shape = NA) +
+  geom_text(
+    data = chain_counts,
+    aes(label = str_c("n = ", n), y = Inf),
+    vjust = 1.5,
+    size = 3
+  ) +
+  facet_wrap(~ mutation_category) +
+  labs(
+    x = NULL,
+    y = "Experimental ΔΔG (kcal/mol)",
+    title = "Experimental ΔΔG by chain"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
 ## Alanine mutation counts by assay pH
 
 For single-point mutations to alanine, we count the measurements at
@@ -68,3 +162,30 @@ W → A is counted under W. We state the pH cutoff alongside the table
 and report how many measurements are missing assay pH. This lets us
 see which starting amino acids have enough measurements in both pH
 groups for a later comparison.
+
+Some assay pH values are written as ranges or pairs (e.g. `7.3_7.5` or
+`6.2 & 7.0`). We use the first number in each value. We use pH 7.4
+(physiological pH) as the cutoff: pH ≤ 7.4 is low and pH > 7.4 is high.
+
+```{r}
+ala_ph <- dat_aug |>
+  filter(to_alanine) |>
+  mutate(
+    assay_ph_num = parse_number(assay_ph),
+    ph_group = case_when(
+      assay_ph_num <= 7.4 ~ "low",
+      assay_ph_num > 7.4 ~ "high"
+    )
+  )
+
+# How many alanine measurements are missing assay pH
+ala_ph |>
+  summarise(missing_assay_ph = sum(is.na(ph_group)))
+
+# Counts per starting amino acid and pH group
+ala_ph |>
+  drop_na(ph_group) |>
+  count(mut_from, ph_group) |>
+  pivot_wider(names_from = ph_group, values_from = n, values_fill = 0) |>
+  arrange(mut_from)
+```
