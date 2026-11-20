@@ -44,6 +44,44 @@ dat_aug <- dat_clean %>%
 # Count the rows in each category and check for any NA values
 dat_aug %>% count(mutation_category)
 ```
+## Amino acid features
+
+We add `to_alanine` (TRUE if the residue is mutated to alanine, FALSE
+otherwise), which we use in 04_describe. For the original (`from`) and
+new (`to`) amino acid we also add the Kyte-Doolittle hydrophobicity value
+and a chemical type: hydrophobic, aromatic, polar, positive, negative or
+special.
+
+```{r}
+aa_props <- tibble(
+  aa = c("A","R","N","D","C","Q","E","G","H","I",
+         "L","K","M","F","P","S","T","W","Y","V"),
+  hydro = c(1.8,-4.5,-3.5,-3.5,2.5,-3.5,-3.5,-0.4,-3.2,4.5,
+            3.8,-3.9,1.9,2.8,-1.6,-0.8,-0.7,-0.9,-1.3,4.2),
+  type = case_when(
+    aa %in% c("A","V","L","I","M") ~ "hydrophobic",
+    aa %in% c("F","W","Y")         ~ "aromatic",
+    aa %in% c("S","T","N","Q","C") ~ "polar",
+    aa %in% c("K","R","H")         ~ "positive",
+    aa %in% c("D","E")             ~ "negative",
+    aa %in% c("G","P")             ~ "special"
+  )
+)
+
+dat_aug <- dat_aug |>
+  mutate(to_alanine = mut_to == "A") |>
+  left_join(aa_props |> rename(mut_from = aa, hydro_from = hydro, type_from = type),
+            by = "mut_from") |>
+  left_join(aa_props |> rename(mut_to = aa, hydro_to = hydro, type_to = type),
+            by = "mut_to") |>
+  mutate(
+    delta_hydro = hydro_to - hydro_from,
+    type_change = str_c(type_from, " → ", type_to)
+  )
+
+dat_aug |> count(to_alanine)
+dat_aug |> count(type_from)
+```
 
 ## Save augmented data
 
