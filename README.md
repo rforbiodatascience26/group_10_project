@@ -7,7 +7,7 @@
 | Luis Sebastian Galán | s235397 | luisgalan |
 | Laura Grenaa Jensen | s235427 | lauragjensen |
 | Taniya Dey | s263756   | taniyadey0229-rgb |
-| Thota Kanishka Rao | s263780 | [Username] |
+| Thota Kanishka Rao | s263780 | Pikachuuu2503 |
 
 ## Group 10: Exploring Mutation Effects on Protein Binding
 
