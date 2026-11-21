@@ -1,5 +1,341 @@
 ---
-title: "05_analysis_2"
+title: "Analysis 2: What happens when we replace different residues with alanine?"
+author: "Luis Sebastian Galán, Laura Grenaa Jensen, Taniya Dey and Thota Kanishka Rao"
 format: html
+editor: 
+  markdown: 
+    wrap: 72
 ---
 
+## What are we looking at?
+
+We want to see which types of amino acids show the biggest changes in
+binding when replaced with alanine. We first compare the chemical groups
+using all alanine mutations together. Then we check which differences
+are still there after accounting for the chain and structure.
+
+We use experimental ΔΔG throughout. A positive value means that the
+mutation weakened binding compared with the original complex.
+
+## Select and describe the alanine mutations
+
+We select mutations to alanine using to_alanine from the augmentation
+step. We keep rows with a recorded ΔΔG, chemical group, mutation
+location, and structure ID so we can use the same rows in every model.
+
+```{r}
+#| label: select-alanine-mutations
+
+library("tidyverse")
+library("here")
+
+dat_aug <- read_csv(here("data", "03_dat_aug.csv"))
+
+dat_alanine <- dat_aug |>
+  filter(to_alanine) |>
+  drop_na(ddg, type_from, mutation_category, pdb)
+```
+
+We first count the rows in each group and calculate the median ΔΔG and
+interquartile range (IQR). The median shows a typical value for the
+group, and the IQR shows how spread out the middle half of the values
+are.
+
+```{r}
+#| label: summarise-amino-acid-groups
+
+alanine_group_summary <- dat_alanine |>
+  group_by(type_from) |>
+  summarise(
+    n_rows = n(),
+    mean_ddg = mean(ddg), 
+    median_ddg = median(ddg),
+    iqr_ddg = IQR(ddg),
+    
+    .groups = "drop"
+  ) |>
+  arrange(desc(median_ddg))
+
+alanine_group_summary
+```
+
+The aromatic group had the highest mean ΔΔG (1.92 kcal/mol), and the
+polar group had the lowest (0.68 kcal/mol). The groups also differed in
+size. The polar group had the most rows (98), and the special group had
+the fewest (18).
+
+## Do the chemical groups differ overall?
+
+We start with a one-way ANOVA to test whether mean ΔΔG differs across
+the chemical groups. At this point we pool mutations from all locations
+and structures.
+
+```{r}
+#| label: test-pooled-chemical-groups
+
+model_pooled <- lm(
+  ddg ~ type_from,
+  data = dat_alanine_model
+)
+
+anova(model_pooled)
+```
+
+Mean ΔΔG differed between at least two chemical groups in the pooled
+analysis (`F(5, 347) = 5.11, p = 0.000156`).
+
+## Which differences remain after adjusting for location and structure?
+
+Some chemical groups may have been tested more often on certain chains
+or in certain structures. To account for this, we fit two models that
+both include mutation location (`mutation_category`) and structure ID
+(`ID`). We add chemical group to the second model and test whether it
+improves the fit.
+
+```{r}
+#| label: test-adjusted-chemical-groups
+
+model_without_chemistry <- lm(
+  ddg ~ mutation_category + pdb,
+  data = dat_alanine_model
+)
+
+model_adjusted <- lm(
+  ddg ~ type_from + mutation_category + pdb,
+  data = dat_alanine_model
+)
+
+anova(model_without_chemistry, model_adjusted)
+```
+
+Adding chemical group improved the model fit after accounting for
+mutation location and structure (`F(5, 327) = 4.32, p = 0.000814`).
+
+We then compare the chemical groups two at a time in both the pooled and
+adjusted models. We use Holm's method to adjust the p-values within each
+set of comparisons.
+
+The estimates are mean differences in kcal/mol. For example, a positive
+estimate for `aromatic - polar` means the aromatic group had a higher
+estimated mean ΔΔG.
+
+```{r}
+#| label: compare-pooled-and-adjusted-pairs
+
+pooled_means <- emmeans::emmeans(model_pooled, specs = "type_from")
+adjusted_means <- emmeans::emmeans(model_adjusted, specs = "type_from")
+
+pooled_pairs <- emmeans::contrast(
+  pooled_means,
+  method = "pairwise",
+  adjust = "holm"
+) |>
+  as.data.frame() |>
+  select(
+    contrast,
+    pooled_difference = estimate,
+    pooled_p_adjusted = p.value
+  )
+
+adjusted_pairs <- emmeans::contrast(
+  adjusted_means,
+  method = "pairwise",
+  adjust = "holm"
+) |>
+  as.data.frame() |>
+  select(
+    contrast,
+    adjusted_difference = estimate,
+    adjusted_se = SE,
+    adjusted_p_adjusted = p.value
+  )
+
+pairwise_comparison <- pooled_pairs |>
+  left_join(adjusted_pairs, by = "contrast") |>
+  arrange(adjusted_p_adjusted)
+
+pairwise_comparison
+```
+
+After accounting for mutation location and structure, two pairs had
+Holm-adjusted p-values below 0.05. Mean ΔΔG was `0.95 kcal/mol` higher
+for aromatic-to-alanine mutations and `0.78 kcal/mol` higher for
+positive-to-alanine mutations, both compared with polar-to-alanine
+mutations. The aromatic–polar difference decreased from `1.23` to
+`0.95 kcal/mol` after adjustment, while the positive–polar difference
+stayed about the same.
+
+## Do the differences vary by mutation location?
+
+The adjusted model gives one difference per pair of chemical groups. We
+now test whether those differences vary between the heavy chain, light
+chain, and antigen. For example, the gap between aromatic and polar
+residues could be larger on the heavy chain than on the light chain.
+
+We first check how many rows we have for each combination. A combination
+with few or no rows gives us little information about that comparison.
+
+```{r}
+#| label: count-mutations-by-location
+
+dat_alanine_model |>
+  count(mutation_category, type_from) |>
+  pivot_wider(
+    names_from = type_from,
+    values_from = n,
+    values_fill = 0
+  )
+```
+
+The aromatic and polar groups were represented at all three locations,
+with at least 19 rows per group at each location. The hydrophobic group
+had only one row on the heavy chain and two on the light chain. There
+were no rows from the negative group on the light chain. This limits
+what we can say about those groups on the antibody chains.
+
+```{r}
+#| label: test-chemical-group-by-location
+
+model_location_interaction <- lm(
+  ddg ~ type_from * mutation_category + pdb,
+  data = dat_alanine_model
+)
+
+anova(model_adjusted, model_location_interaction)
+```
+
+Adding the interaction improved the model fit when all rows were
+included (`F(9, 318) = 2.35, p = 0.0139`). This suggests that some
+chemical-group differences varied across locations. This overall test
+doesn’t tell us which pairs varied. We use the next plot to look at the
+patterns on the heavy chain, light chain, and antigen.
+
+The plot shows the observed ΔΔG values at each location. We use the same
+scale in all three panels so the patterns are easy to compare.
+
+```{r}
+#| label: fig-alanine-chemistry-by-location
+
+dat_alanine_model |>
+  ggplot(aes(x = type_from, y = ddg, fill = type_from)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_boxplot(outlier.shape = NA, alpha = 0.7) +
+  geom_jitter(width = 0.15, height = 0, alpha = 0.3, size = 1) +
+  facet_wrap(
+    ~ mutation_category,
+    ncol = 1,
+    labeller = as_labeller(c(
+      ab_heavy = "Heavy chain",
+      ab_light = "Light chain",
+      antigen = "Antigen"
+    ))
+  ) +
+  labs(
+    x = "Chemical group of the original amino acid",
+    y = "Experimental ΔΔG (kcal/mol)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+The aromatic group had a higher observed median ΔΔG than the polar group
+in all three panels. The gap looked larger on the heavy chain than on
+the light chain. These are the observed values, so we use the plot to
+describe the pattern. A separate comparison would be needed to test
+whether the aromatic–polar gap itself differs between chains.
+
+## Do the differences vary by structure?
+
+We do the same check for structure ID. We first count how many chemical
+groups are represented in each structure. A structure with only one
+group gives us no direct comparison between groups within that
+structure.
+
+```{r}
+#| label: count-groups-by-structure
+
+dat_alanine_model |>
+  distinct(pdb, type_from) |>
+  count(pdb, name = "n_chemical_groups") |>
+  count(n_chemical_groups, name = "n_structure_ids")
+```
+
+Seven of the 19 structure IDs had data for all six chemical groups. Two
+had data for only one group, so they could not contribute a
+within-structure comparison. The remaining structures let us compare
+some of the groups.
+
+```{r}
+#| label: test-chemical-group-by-structure
+
+model_structure_interaction <- lm(
+  ddg ~ type_from * pdb + mutation_category,
+  data = dat_alanine_model
+)
+
+anova(model_adjusted, model_structure_interaction)
+```
+
+We found no clear evidence that the chemical-group differences varied by
+structure ID (`F(63, 264) = 1.04, p = 0.412`). Since only seven
+structures had data for all six groups, some differences were hard to
+compare across structures. In the next plot, we look at the
+aromatic–polar difference in the structures where both groups were
+tested.
+
+We use aromatic and polar residues as an example in the plot below. For
+each structure with both groups, we subtract the observed polar median
+from the observed aromatic median. A point to the right of zero means
+the aromatic group had the higher median ΔΔG in that structure.
+
+```{r}
+#| label: fig-aromatic-polar-by-structure
+#| fig-width: 8
+#| fig-height: 5
+
+structure_comparison <- dat_alanine_model |>
+  filter(type_from %in% c("aromatic", "polar")) |>
+  group_by(pdb, type_from) |>
+  summarise(
+    median_ddg = median(ddg),
+    .groups = "drop"
+  ) |>
+  pivot_wider(
+    names_from = type_from,
+    values_from = median_ddg
+  ) |>
+  drop_na(aromatic, polar) |>
+  mutate(median_difference = aromatic - polar)
+
+structure_comparison |>
+  ggplot(aes(
+    x = median_difference,
+    y = fct_reorder(pdb, median_difference)
+  )) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_point() +
+  labs(
+    x = "Aromatic median − polar median ΔΔG (kcal/mol)",
+    y = "Structure ID"
+  ) +
+  theme_minimal()
+```
+
+Of the 15 structure IDs with both groups, 12 had a higher median ΔΔG for
+aromatic-to-alanine mutations, two had a higher median for
+polar-to-alanine mutations, and one had the same median. The difference
+went in the same direction in most structures. These are observed
+medians, and the plot does not adjust for mutation location.
+
+## What did we find?
+
+After accounting for mutation location and structure, mean ΔΔG was 0.95
+kcal/mol higher for aromatic-to-alanine mutations and 0.78 kcal/mol
+higher for positive-to-alanine mutations than for polar-to-alanine
+mutations (Holm-adjusted `p = 0.000702` and `p = 0.0175`).
+
+With all rows included, the differences varied by mutation location (`p
+= 0.0139`). Both pairs differed on the heavy chain, and only
+positive–polar differed on the light chain. The direct comparisons
+between locations were inconclusive. We found no clear evidence that the
+differences varied by structure (`p = 0.412`).
