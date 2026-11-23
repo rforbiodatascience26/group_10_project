@@ -16,6 +16,7 @@ source(here("R", "99_proj_func.R"))
 
 We load the augmented dataset from the previous step. We use
 `mutation_category` to group mutations by where they are in the complex.
+We remove the second copy of complex 1DVF, which 02_clean includes twice.
 
 ```{r}
 dat_aug <- read_csv(
@@ -25,7 +26,11 @@ dat_aug <- read_csv(
       levels = c("ab_heavy", "ab_light", "antigen")
     )
   )
-)
+) |>
+  # 1DVF is an antibody-antibody complex that 02_clean includes twice
+  # (roles swapped), so each measurement appears two times. Keep only
+  # the copy where the mutated chain is named H or L.
+  filter(!(pdb == "1DVF" & !mut_chain %in% c("H", "L")))
 ```
 
 ## Dataset overview
