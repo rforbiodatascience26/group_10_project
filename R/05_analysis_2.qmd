@@ -11,13 +11,15 @@ binding when replaced with alanine. We first compare the chemical groups
 using all alanine mutations together. Then we check which differences
 are still there after accounting for the chain and structure.
 
-We use experimental ΔΔG throughout. A positive value means that the
+We use 328 experimental $\Delta \Delta G$ measurements. A positive value means that the
 mutation weakened binding compared with the original complex.
+
+--- ! should we comment on +8 and 1vdf ---- should be handled in clean --- 
 
 ## Select and describe the alanine mutations
 
 We select mutations to alanine using to_alanine from the augmentation
-step. We keep rows with a recorded ΔΔG, chemical group, mutation
+step. We keep rows with a recorded $\Delta \Delta G$, chemical group, mutation
 location, and structure pdb so we can use the same rows in every model.
 
 ```{r}
@@ -29,42 +31,84 @@ library("here")
 dat_aug <- read_csv(here("data", "03_dat_aug.csv"))
 
 dat_alanine <- dat_aug |>
-  filter(to_alanine) |>
-  drop_na(ddg, type_from, mutation_category, pdb)
+  filter(
+    to_alanine,
+    mut_from != "A",) |>
+  drop_na(ddg, type_from, mutation_category, pdb) |>
+  mutate(
+    type_from = factor(type_from),
+    mutation_category = factor(mutation_category),
+    pdb = factor(pdb)
+  )
 ```
 
-We first count the rows in each group and calculate the median ΔΔG and
-interquartile range (IQR). The median shows a typical value for the
-group, and the IQR shows how spread out the middle half of the values
-are.
+## Which amino acids had the highest mean $\Delta \Delta G$?
+We start by comparing the mean experimental $\Delta \Delta G$ for each starting
+amino acid. Some amino acids were measured only once or twice, so we
+show how many measurements and complexes are behind each mean.
 
 ```{r}
-#| label: summarise-amino-acid-groups
+#| label: alanine-by-amino-acid
 
-alanine_group_summary <- dat_alanine |>
-  group_by(type_from) |>
+alanine_summary <- dat_alanine |>
+  group_by(mut_from, type_from) |>
   summarise(
-    n_rows = n(),
-    mean_ddg = mean(ddg), 
+    n_measurements = n(),
+    n_complexes = n_distinct(pdb),
+    mean_ddg = mean(ddg),
     median_ddg = median(ddg),
-    iqr_ddg = IQR(ddg),
-    
+    sd_ddg = sd(ddg),
     .groups = "drop"
   ) |>
-  arrange(desc(median_ddg))
+  mutate(
+    se_ddg = sd_ddg / sqrt(n_measurements),
+    df = if_else(n_measurements > 1, n_measurements - 1, NA_real_),
+    margin = qt(0.975, df = df) * se_ddg,
+    ci_lower = mean_ddg - margin,
+    ci_upper = mean_ddg + margin
+  ) |>
+  select(-sd_ddg, -se_ddg, -df, -margin) |>
+  arrange(desc(mean_ddg))
 
-alanine_group_summary
+alanine_summary
 ```
 
-The aromatic group had the highest mean ΔΔG (1.92 kcal/mol), and the
-polar group had the lowest (0.68 kcal/mol). The groups also differed in
-size. The polar group had the most rows (98), and the special group had
-the fewest (18).
+We compare the mean experimental $\Delta \Delta G$ for each starting amino acid.
+The labels show how many measurements and complexes each mean is
+based on. The lines show $95\%$ confidence intervals. Amino acids with
+only one measurement are shown as a point without an interval.
 
-## Do the chemical groups differ overall?
+```{r}
+#| label: fig-alanine-by-amino-acid
+#| fig-width: 9
+#| fig-height: 6
 
-We start with a one-way ANOVA to test whether mean ΔΔG differs across
-the chemical groups. At this point we pool mutations from all locations
+alanine_summary |>
+  mutate(mut_from = fct_reorder(mut_from, mean_ddg)) |>
+  ggplot(aes(x = mean_ddg, y = mut_from, colour = type_from)) +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "grey60") +
+  geom_segment(
+    aes(x = ci_lower, xend = ci_upper, yend = mut_from),
+    linewidth = 0.7,
+    na.rm = TRUE
+  ) +
+  geom_point(aes(size = n_measurements)) +
+  scale_colour_brewer(palette = "Dark2") +
+  scale_x_continuous(breaks = scales::breaks_width(1)) +
+  labs(
+    x = "Mean experimental ΔΔG (kcal/mol)",
+    y = "Starting amino acid",
+    colour = "Chemical group",
+    size = "Measurements"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+
+## Do the chemical groups differ?
+
+Some amino acids had only a few measurements, so we group the mutations by the chemical properties of the starting amino acid. We start with a one-way ANOVA to test whether mean $\Delta \Delta G$ differs across the chemical groups. At this point we pool mutations from all locations
 and structures.
 
 ```{r}
@@ -81,13 +125,15 @@ anova(model_pooled)
 Mean ΔΔG differed between at least two chemical groups in the pooled
 analysis (`F(5, 347) = 5.11, p = 0.000156`).
 
+
 ## Which differences remain after adjusting for location and structure?
 
 Some chemical groups may have been tested more often on certain chains
 or in certain structures. To account for this, we fit two models that
-both include mutation location (`mutation_category`) and structure pdb
+both include mutation location (`mutation_category`) and PDB ID
 (`pdb`). We add chemical group to the second model and test whether it
 improves the fit.
+
 
 ```{r}
 #| label: test-adjusted-chemical-groups
@@ -114,7 +160,7 @@ set of comparisons.
 
 The estimates are mean differences in kcal/mol. For example, a positive
 estimate for `aromatic - polar` means the aromatic group had a higher
-estimated mean ΔΔG.
+estimated mean $\Delta \Delta G$
 
 ```{r}
 #| label: compare-pooled-and-adjusted-pairs
@@ -336,3 +382,5 @@ With all rows included, the differences varied by mutation location (`p
 positive–polar differed on the light chain. The direct comparisons
 between locations were inconclusive. We found no clear evidence that the
 differences varied by structure (`p = 0.412`).
+
+
