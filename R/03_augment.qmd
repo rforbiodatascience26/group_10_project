@@ -6,7 +6,7 @@ format: html
 
 ## Setup
 
-```{r}
+```{r, message=FALSE}
 library("tidyverse")
 library("here")
 ```
@@ -15,7 +15,7 @@ library("here")
 
 We load the cleaned dataset from the previous step.
 
-```{r}
+```{r, message=FALSE}
 dat_clean <- read_csv(here("data", "02_dat_clean.csv"))
 ```
 
@@ -76,7 +76,6 @@ dat_aug <- dat_aug |>
             by = "mut_to") |>
   mutate(
     delta_hydro = hydro_to - hydro_from,
-    type_change = str_c(type_from, " → ", type_to)
   )
 
 dat_aug |> count(to_alanine)

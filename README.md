@@ -41,12 +41,20 @@ Data files are stored locally in `_raw/` and `data/`.
 
 ### Running the Project
 
-1. Clone this repository and open the RStudio project.
+1. Clone this repository and open the `.Rproj` file in RStudio.
 2. Install the R packages used in the Quarto documents.
-3. Run `R/01_load.qmd` to retrieve and import the data.
-4. Run `R/02_clean.qmd` and `R/03_augment.qmd`.
-5. Run the description and analysis documents in numerical order.
-6. Render `doc/presentation.qmd` to create the presentation.
+3. Render `R/00_all.qmd` to download the data and run the full analysis.
+
+   To run the project step by step, render the following files in order.
+
+   1. `R/01_load.qmd` downloads and imports the data.
+   2. `R/02_clean.qmd` cleans the data.
+   3. `R/03_augment.qmd` adds variables used in the analyses.
+   4. `R/04_describe.qmd` summarises and visualises the dataset.
+   5. `R/05_analysis_1.qmd` runs the first analysis.
+   6. `R/06_analysis_2.qmd` runs the second analysis.
+
+4. Render `doc/presentation.qmd` to create the presentation.
 
 ### Presentation
 
@@ -54,6 +62,4 @@ Data files are stored locally in `_raw/` and `data/`.
 
 ### Use of Generative AI
 
-[Describe how generative AI was used, including assistance with
-project planning and drafting this README. Add references according
-to the course guidelines.]
+We used ChatGPT (OpenAI) and Mistral AI to review our R scripts and analysis write-up. We asked them to point out mistakes in the code, gaps in our reasoning, and explanations that were hard to follow. When they flagged something, we asked for suggestions on how to fix it. We checked the suggestions against our code and results and decided as a group what to change. This helped us catch errors and explain our analysis more clearly.

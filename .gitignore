@@ -4,3 +4,9 @@
 .Ruserdata
 _raw/
 data/
+results/01_load_files
+results/02_clean_files
+results/03_augment_files
+results/04_describe_files
+results/05_analysis_1_files
+results/06_analysis_2_files

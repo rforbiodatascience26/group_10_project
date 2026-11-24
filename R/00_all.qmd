@@ -16,7 +16,7 @@ project_files <- c(
   "03_augment.qmd",
   "04_describe.qmd",
   "05_analysis_1.qmd",
-  "05_analysis_2.qmd"
+  "06_analysis_2.qmd"
 )
 
 # Render each file and wait for it to finish before starting the next.
