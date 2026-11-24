@@ -20,7 +20,7 @@ We select mutations to alanine using to_alanine from the augmentation
 step. We keep rows with a recorded $\Delta \Delta G$, chemical group, mutation
 location, and structure pdb so we can use the same rows in every model.
 
-```{r}
+```{r, message=FALSE}
 #| label: select-alanine-mutations
 
 library("tidyverse")
