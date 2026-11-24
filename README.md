@@ -43,10 +43,16 @@ Data files are stored locally in `_raw/` and `data/`.
 
 1. Clone this repository and open the RStudio project.
 2. Install the R packages used in the Quarto documents.
-3. Run `R/01_load.qmd` to retrieve and import the data.
-4. Run `R/02_clean.qmd` and `R/03_augment.qmd`.
-5. Run the description and analysis documents in numerical order.
-6. Render `doc/presentation.qmd` to create the presentation.
+3. Run `R/00_all.qmd` to retrieve and the full project.
+
+   To run the project step by step, render these files in order:
+  1. R/01_load.qmd to download and import the data.
+  2. R/02_clean.qmd to clean the data.
+  3. R/03_augment.qmd to add variables used in the analyses.
+  4. R/04_describe.qmd to summarise and visualise the dataset.
+  5. R/05_analysis_1.qmd and R/06_analysis_2.qmd to run the two analyses.
+   
+9. Render `doc/presentation.qmd` to create the presentation.
 
 ### Presentation
 
