@@ -6,7 +6,7 @@ format: html
 
 ## Setup
 
-```{r}
+```{r, message=FALSE}
 #| label: setup
 library("tidyverse")
 library("here")
@@ -14,7 +14,7 @@ library("here")
 
 ## Load dataset
 
-```{r}
+```{r, message=FALSE}
 ab_bind <- read_csv(here('data/01_dat_load_experimental.csv')) |>
   select(
     pdb = `#PDB`,
