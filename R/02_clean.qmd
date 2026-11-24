@@ -21,11 +21,8 @@ ab_bind <- read_csv(here('data/01_dat_load_experimental.csv')) |>
     partners = `Partners(A_B)`,
     mutation = Mutation,
     ddg = `ddG(kcal/mol)`,
-    pdb_ph = `PDB pH`,
     assay_name = `Assay Name`,
-    assay_ph = `Assay pH`
   )
-
 
 ab_bind
 ```
@@ -129,8 +126,12 @@ comp <- read_csv(
       method == "statium_expt_comp" ~ "statium"
     )
   ) |>
-  summarise(comp = mean(comp), .by = c(method, pdb, mutation), na.rm = TRUE) |>
-  pivot_wider(names_from = method, values_from = comp) |>
+  summarise(
+    comp = mean(comp, na.rm = TRUE),
+    .by = c(method, pdb, mutation)) |>
+  pivot_wider(
+    names_from = method, 
+    values_from = comp) |>
   rename(
     d_studio_ddg = d_studio,
     ddfire_ddg = ddfire,
@@ -185,8 +186,6 @@ ab_bind_ab <- ab_bind_ab |>
     ddg,
     ends_with("_ddg"),
     basa_all_side,
-    assay_ph,
-    pdb_ph,
     everything(),
   )
 

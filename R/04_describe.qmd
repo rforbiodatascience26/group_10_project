@@ -16,7 +16,6 @@ source(here("R", "99_proj_func.R"))
 
 We load the augmented dataset from the previous step. We use
 `mutation_category` to group mutations by where they are in the complex.
-We remove the second copy of complex 1DVF, which 02_clean includes twice.
 
 ```{r}
 dat_aug <- read_csv(
@@ -24,23 +23,16 @@ dat_aug <- read_csv(
   col_types = cols(
     mutation_category = col_factor(
       levels = c("ab_heavy", "ab_light", "antigen")
-    )
-  )
-) |>
-  # 1DVF is an antibody-antibody complex that 02_clean includes twice
-  # (roles swapped), so each measurement appears two times. Keep only
-  # the copy where the mutated chain is named H or L.
-  filter(!(pdb == "1DVF" & !mut_chain %in% c("H", "L")))
+      )))
 ```
 
 ## Dataset overview
 
-We first count the number of experimental ΔΔG measurements, unique
+We first count the number of experimental $\Delta \Delta G$ measurements, unique
 variants, and complexes. We count measurements and variants separately
 because the same variant can be measured more than once. All rows are
 single-point mutations, because 02_clean removed multiple mutations,
-insertions and deletions. We also count how many measurements have values
-for both assay pH and PDB pH.
+insertions and deletions. 
 
 ```{r}
 dat_aug |>
@@ -48,7 +40,6 @@ dat_aug |>
     n_measurements = n(),
     n_variants = n_distinct(pdb, mut_chain, mut_position, mut_from, mut_to),
     n_complexes = n_distinct(pdb),
-    n_both_ph = sum(!is.na(assay_ph) & !is.na(pdb_ph) & pdb_ph != "na")
   )
 ```
 
@@ -68,12 +59,12 @@ dat_aug |>
 ## Mutations to alanine vs. other amino acids
 
 We compare single-point mutations to alanine with mutations to any other
-amino acid. The first panel shows the experimental ΔΔG, followed by one
+amino acid. The first panel shows the experimental $\Delta \Delta G$, followed by one
 panel for each computational method. We use the same set of variants
 across panels where possible and show the number of measurements in each
 group so we can see when the available data differ between panels.
 
-We add a small boxplot inside each violin and a dashed line at ΔΔG = 0.
+We add a small boxplot inside each violin and a dashed line at $\Delta \Delta G = 0$.
 All groups have more than 200 measurements, so we do not need to show
 individual points.
 
@@ -109,10 +100,10 @@ ddg_long |>
 
 ## Experimental ΔΔG by chain
 
-We repeat the alanine comparison using experimental ΔΔG only, with
+We repeat the alanine comparison using experimental $\Delta \Delta G$ only, with
 separate panels for the heavy chain, light chain, and antigen. Each
 panel shows the distributions for mutations to alanine and mutations
-to other amino acids. We use the same ΔΔG scale across panels so we can
+to other amino acids. We use the same $\Delta \Delta G$ scale across panels so we can
 compare the distributions between chains.
 
 ```{r}
@@ -127,39 +118,3 @@ dat_aug |>
   )
 ```
 
-## Alanine mutation counts by assay pH
-
-For single-point mutations to alanine, we count the measurements at
-low and high assay pH for each starting amino acid. For example,
-W to A is counted under W. We state the pH cutoff alongside the table
-and report how many measurements are missing assay pH. This lets us
-see which starting amino acids have enough measurements in both pH
-groups for a later comparison.
-
-Some assay pH values are written as ranges or pairs (e.g. `7.3_7.5` or
-`6.2 & 7.0`). We use the first number in each value. We use pH 7.4
-(physiological pH) as the cutoff: pH 7.4 or lower is low and above 7.4
-is high.
-
-```{r}
-ala_ph <- dat_aug |>
-  filter(to_alanine) |>
-  mutate(
-    assay_ph_num = parse_number(assay_ph),
-    ph_group = case_when(
-      assay_ph_num <= 7.4 ~ "low",
-      assay_ph_num > 7.4 ~ "high"
-    )
-  )
-
-# How many alanine measurements are missing assay pH
-ala_ph |>
-  summarise(missing_assay_ph = sum(is.na(ph_group)))
-
-# Counts per starting amino acid and pH group
-ala_ph |>
-  drop_na(ph_group) |>
-  count(mut_from, ph_group) |>
-  pivot_wider(names_from = ph_group, values_from = n, values_fill = 0) |>
-  arrange(mut_from)
-```

@@ -14,8 +14,6 @@ are still there after accounting for the chain and structure.
 We use 328 experimental $\Delta \Delta G$ measurements. A positive value means that the
 mutation weakened binding compared with the original complex.
 
---- ! should we comment on +8 and 1vdf ---- should be handled in clean --- 
-
 ## Select and describe the alanine mutations
 
 We select mutations to alanine using to_alanine from the augmentation
@@ -201,7 +199,7 @@ pairwise_comparison
 ```
 
 After accounting for mutation location and structure, two pairs had
-Holm-adjusted p-values below 0.05. Mean ΔΔG was `0.95 kcal/mol` higher
+Holm-adjusted p-values below 0.05. Mean $\Delta \Delta G$ was `0.95 kcal/mol` higher
 for aromatic-to-alanine mutations and `0.78 kcal/mol` higher for
 positive-to-alanine mutations, both compared with polar-to-alanine
 mutations. The aromatic–polar difference decreased from `1.23` to
@@ -253,7 +251,7 @@ chemical-group differences varied across locations. This overall test
 doesn’t tell us which pairs varied. We use the next plot to look at the
 patterns on the heavy chain, light chain, and antigen.
 
-The plot shows the observed ΔΔG values at each location. We use the same
+The plot shows the observed $\Delta \Delta G$ values at each location. We use the same
 scale in all three panels so the patterns are easy to compare.
 
 ```{r}
@@ -281,7 +279,7 @@ dat_alanine |>
   theme(legend.position = "none")
 ```
 
-The aromatic group had a higher observed median ΔΔG than the polar group
+The aromatic group had a higher observed median $\Delta \Delta G$ than the polar group
 in all three panels. The gap looked larger on the heavy chain than on
 the light chain. These are the observed values, so we use the plot to
 describe the pattern. A separate comparison would be needed to test
@@ -329,7 +327,7 @@ tested.
 We use aromatic and polar residues as an example in the plot below. For
 each structure with both groups, we subtract the observed polar median
 from the observed aromatic median. A point to the right of zero means
-the aromatic group had the higher median ΔΔG in that structure.
+the aromatic group had the higher median $\Delta \Delta G$ in that structure.
 
 ```{r}
 #| label: fig-aromatic-polar-by-structure
@@ -364,7 +362,7 @@ structure_comparison |>
   theme_minimal()
 ```
 
-Of the 15 structure IDs with both groups, 12 had a higher median ΔΔG for
+Of the 15 structure IDs with both groups, 12 had a higher median $\Delta \Delta G$ for
 aromatic-to-alanine mutations, two had a higher median for
 polar-to-alanine mutations, and one had the same median. The difference
 went in the same direction in most structures. These are observed
@@ -372,7 +370,7 @@ medians, and the plot does not adjust for mutation location.
 
 ## What did we find?
 
-After accounting for mutation location and structure, mean ΔΔG was 0.95
+After accounting for mutation location and structure, mean $\Delta \Delta G$ was 0.95
 kcal/mol higher for aromatic-to-alanine mutations and 0.78 kcal/mol
 higher for positive-to-alanine mutations than for polar-to-alanine
 mutations (Holm-adjusted `p = 0.000702` and `p = 0.0175`).
