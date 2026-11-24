@@ -54,6 +54,4 @@ Data files are stored locally in `_raw/` and `data/`.
 
 ### Use of Generative AI
 
-[Describe how generative AI was used, including assistance with
-project planning and drafting this README. Add references according
-to the course guidelines.]
+We used ChatGPT (OpenAI) and Mistral AI to review our R scripts and analysis write-up. We asked them to point out mistakes in the code, gaps in our reasoning, and explanations that were hard to follow. When they flagged something, we asked for suggestions on how to fix it. We checked the suggestions against our code and results and decided as a group what to change. This helped us catch errors and explain our analysis more clearly.
