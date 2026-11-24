@@ -10,6 +10,9 @@ format: html
 library("tidyverse")
 library("here")
 source(here("R", "99_proj_func.R"))
+
+# Folder for saved plots
+dir.create(here("results"), showWarnings = FALSE)
 ```
 
 ## Load data
@@ -69,6 +72,8 @@ All groups have more than 200 measurements, so we do not need to show
 individual points.
 
 ```{r}
+#| label: fig-04-alanine-vs-other
+#| fig-cap: "Experimental and predicted ΔΔG for mutations to alanine vs. other amino acids. Saved as results/04_plot_alanine_vs_other.png."
 #| fig-width: 10
 #| fig-height: 7
 # Keep only variants that have a prediction from every method,
@@ -89,13 +94,23 @@ ddg_long <- dat_aug |>
   ) |>
   add_target_label()
 
-ddg_long |>
+plot_alanine_vs_other <- ddg_long |>
   plot_ddg_violin(
     facet_var = "method",
     y_label = "ΔΔG (kcal/mol)",
     title = "ΔΔG for mutations to alanine vs. other amino acids",
     free_y = TRUE
   )
+
+plot_alanine_vs_other
+
+ggsave(
+  filename = here("results", "04_plot_alanine_vs_other.png"),
+  plot = plot_alanine_vs_other,
+  width = 10,
+  height = 7,
+  dpi = 300
+)
 ```
 
 ## Experimental ΔΔG by chain
@@ -107,14 +122,26 @@ to other amino acids. We use the same $\Delta \Delta G$ scale across panels so w
 compare the distributions between chains.
 
 ```{r}
+#| label: fig-04-ddg-by-chain
+#| fig-cap: "Experimental ΔΔG by chain for mutations to alanine vs. other amino acids. Saved as results/04_plot_ddg_by_chain.png."
 #| fig-width: 9
 #| fig-height: 4
-dat_aug |>
+plot_ddg_by_chain <- dat_aug |>
   add_target_label() |>
   plot_ddg_violin(
     facet_var = "mutation_category",
     y_label = "Experimental ΔΔG (kcal/mol)",
     title = "Experimental ΔΔG by chain"
   )
+
+plot_ddg_by_chain
+
+ggsave(
+  filename = here("results", "04_plot_ddg_by_chain.png"),
+  plot = plot_ddg_by_chain,
+  width = 9,
+  height = 4,
+  dpi = 300
+)
 ```
 

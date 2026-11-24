@@ -10,6 +10,9 @@ format: html
 library("tidyverse")
 library("here")
 library("broom")
+
+# Folder for saved plots
+dir.create(here("results"), showWarnings = FALSE)
 ```
 
 ## Load data
@@ -69,9 +72,11 @@ would fall on a straight line. The blue line is a linear fit, and the
 row of points at 8 kcal/mol are the capped values.
 
 ```{r}
+#| label: fig-05-1-predicted-vs-experimental
+#| fig-cap: "Predicted vs. experimental ΔΔG for each computational method. Saved as results/05_1_plot_predicted_vs_experimental.png."
 #| fig-width: 10
 #| fig-height: 6
-dat_pred |>
+plot_predicted_vs_experimental <- dat_pred |>
   ggplot(aes(x = predicted_ddg, y = ddg)) +
   geom_point(alpha = 0.3) +
   geom_smooth(method = "lm", formula = y ~ x) +
@@ -82,6 +87,16 @@ dat_pred |>
     title = "Predicted vs. experimental ΔΔG for each computational method"
   ) +
   theme_minimal()
+
+plot_predicted_vs_experimental
+
+ggsave(
+  filename = here("results", "05_1_plot_predicted_vs_experimental.png"),
+  plot = plot_predicted_vs_experimental,
+  width = 10,
+  height = 6,
+  dpi = 300
+)
 ```
 
 ## Fitting one model per method
@@ -146,9 +161,11 @@ bars show the 95% confidence interval. The further to the right, the
 better the method ranks the mutations.
 
 ```{r}
+#| label: fig-05-1-spearman
+#| fig-cap: "Spearman correlation between predicted and experimental ΔΔG with 95% confidence intervals. Saved as results/05_1_plot_spearman.png."
 #| fig-width: 7
 #| fig-height: 4
-model_summary |>
+plot_spearman <- model_summary |>
   ggplot(aes(x = spearman, y = fct_reorder(method, spearman))) +
   geom_vline(xintercept = 0, linetype = "dashed") +
   geom_errorbarh(aes(xmin = spearman_low, xmax = spearman_high),
@@ -160,6 +177,16 @@ model_summary |>
     title = "How well each method ranks the mutations"
   ) +
   theme_minimal()
+
+plot_spearman
+
+ggsave(
+  filename = here("results", "05_1_plot_spearman.png"),
+  plot = plot_spearman,
+  width = 7,
+  height = 4,
+  dpi = 300
+)
 ```
 
 ## Conclusion
