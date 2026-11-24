@@ -21,7 +21,7 @@ mutation weakened binding compared with the original complex.
 
 We select mutations to alanine using to_alanine from the augmentation
 step. We keep rows with a recorded ΔΔG, chemical group, mutation
-location, and structure ID so we can use the same rows in every model.
+location, and structure pdb so we can use the same rows in every model.
 
 ```{r}
 #| label: select-alanine-mutations
@@ -88,8 +88,8 @@ analysis (`F(5, 347) = 5.11, p = 0.000156`).
 
 Some chemical groups may have been tested more often on certain chains
 or in certain structures. To account for this, we fit two models that
-both include mutation location (`mutation_category`) and structure ID
-(`ID`). We add chemical group to the second model and test whether it
+both include mutation location (`mutation_category`) and structure pdb
+(`pdb`). We add chemical group to the second model and test whether it
 improves the fit.
 
 ```{r}
@@ -246,7 +246,7 @@ whether the aromatic–polar gap itself differs between chains.
 
 ## Do the differences vary by structure?
 
-We do the same check for structure ID. We first count how many chemical
+We do the same check for structure pdb. We first count how many chemical
 groups are represented in each structure. A structure with only one
 group gives us no direct comparison between groups within that
 structure.
@@ -257,10 +257,10 @@ structure.
 dat_alanine |>
   distinct(pdb, type_from) |>
   count(pdb, name = "n_chemical_groups") |>
-  count(n_chemical_groups, name = "n_structure_ids")
+  count(n_chemical_groups, name = "n_structure_pdbs")
 ```
 
-Seven of the 19 structure IDs had data for all six chemical groups. Two
+Seven of the 19 structure pdbs had data for all six chemical groups. Two
 had data for only one group, so they could not contribute a
 within-structure comparison. The remaining structures let us compare
 some of the groups.
@@ -277,7 +277,7 @@ anova(model_adjusted, model_structure_interaction)
 ```
 
 We found no clear evidence that the chemical-group differences varied by
-structure ID (`F(63, 264) = 1.04, p = 0.412`). Since only seven
+structure pdb (`F(63, 264) = 1.04, p = 0.412`). Since only seven
 structures had data for all six groups, some differences were hard to
 compare across structures. In the next plot, we look at the
 aromatic–polar difference in the structures where both groups were
@@ -316,7 +316,7 @@ structure_comparison |>
   geom_point() +
   labs(
     x = "Aromatic median − polar median ΔΔG (kcal/mol)",
-    y = "Structure ID"
+    y = "Structure pdb"
   ) +
   theme_minimal()
 ```
