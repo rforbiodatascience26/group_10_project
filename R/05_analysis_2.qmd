@@ -40,6 +40,8 @@ dat_alanine <- dat_aug |>
   )
 ```
 
+Four of the 328 measurements are exactly 8 kcal/mol, which in this dataset means the assay could not detect binding weaker than this, so the true $\Delta \Delta G$ is ≥ 8. All four are aromatic (W, Y) or positive (R, H) residues. We keep these values as 8, which means the mean estimates for those two groups are lower bounds for the true mean.
+
 ## Which amino acids had the highest mean $\Delta \Delta G$?
 We start by comparing the mean experimental $\Delta \Delta G$ for each starting
 amino acid. Some amino acids were measured only once or twice, so we
@@ -55,6 +57,7 @@ alanine_summary <- dat_alanine |>
     n_complexes = n_distinct(pdb),
     mean_ddg = mean(ddg),
     median_ddg = median(ddg),
+    n_capped = sum(ddg == 8),
     sd_ddg = sd(ddg),
     .groups = "drop"
   ) |>
@@ -379,6 +382,8 @@ With all rows included, the differences varied by mutation location (`p
 = 0.0139`). Both pairs differed on the heavy chain, and only
 positive–polar differed on the light chain. The direct comparisons
 between locations were inconclusive. We found no clear evidence that the
-differences varied by structure (`p = 0.412`).
+differences varied by structure (`p = 0.412`). For the aromatic and
+positive groups, the capped values can only push the true mean up, so the
+reported differences relative to polar are, if anything, understated.
 
 
