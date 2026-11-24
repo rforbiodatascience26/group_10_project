@@ -2,9 +2,6 @@
 title: "Analysis 2: What happens when we replace different residues with alanine?"
 author: "Luis Sebastian Galán, Laura Grenaa Jensen, Taniya Dey and Thota Kanishka Rao"
 format: html
-editor: 
-  markdown: 
-    wrap: 72
 ---
 
 ## What are we looking at?

@@ -9,12 +9,14 @@ format: html
 ```{r}
 library("tidyverse")
 library("here")
+source(here("R", "99_proj_func.R"))
 ```
 
 ## Load data
 
 We load the augmented dataset from the previous step. We use
 `mutation_category` to group mutations by where they are in the complex.
+We remove the second copy of complex 1DVF, which 02_clean includes twice.
 
 ```{r}
 dat_aug <- read_csv(
@@ -24,7 +26,11 @@ dat_aug <- read_csv(
       levels = c("ab_heavy", "ab_light", "antigen")
     )
   )
-)
+) |>
+  # 1DVF is an antibody-antibody complex that 02_clean includes twice
+  # (roles swapped), so each measurement appears two times. Keep only
+  # the copy where the mutated chain is named H or L.
+  filter(!(pdb == "1DVF" & !mut_chain %in% c("H", "L")))
 ```
 
 ## Dataset overview
@@ -88,33 +94,17 @@ ddg_long <- dat_aug |>
   drop_na(ddg) |>
   mutate(
     method = str_remove(method, "_ddg"),
-    method = fct_relevel(method, "experimental"),
-    target = if_else(to_alanine, "to alanine", "to other")
-  )
-
-ddg_counts <- ddg_long |>
-  count(method, target)
+    method = fct_relevel(method, "experimental")
+  ) |>
+  add_target_label()
 
 ddg_long |>
-  ggplot(aes(x = target, y = ddg, fill = target)) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  geom_violin(alpha = 0.5) +
-  geom_boxplot(width = 0.15, outlier.shape = NA) +
-  geom_text(
-    data = ddg_counts,
-    aes(label = str_c("n = ", n), y = Inf),
-    vjust = 1.5,
-    size = 3
-  ) +
-  facet_wrap(~ method, scales = "free_y") +
-  labs(
-    x = NULL,
-    y = "ΔΔG (kcal/mol)",
+  plot_ddg_violin(
+    facet_var = "method",
+    y_label = "ΔΔG (kcal/mol)",
     title = "ΔΔG for mutations to alanine vs. other amino acids",
-    subtitle = "Experimental values and six computational predictions"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "none")
+    free_y = TRUE
+  )
 ```
 
 ## Experimental ΔΔG by chain
@@ -128,44 +118,28 @@ compare the distributions between chains.
 ```{r}
 #| fig-width: 9
 #| fig-height: 4
-chain_counts <- dat_aug |>
-  mutate(target = if_else(to_alanine, "to alanine", "to other")) |>
-  count(mutation_category, target)
-
 dat_aug |>
-  mutate(target = if_else(to_alanine, "to alanine", "to other")) |>
-  ggplot(aes(x = target, y = ddg, fill = target)) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  geom_violin(alpha = 0.5) +
-  geom_boxplot(width = 0.15, outlier.shape = NA) +
-  geom_text(
-    data = chain_counts,
-    aes(label = str_c("n = ", n), y = Inf),
-    vjust = 1.5,
-    size = 3
-  ) +
-  facet_wrap(~ mutation_category) +
-  labs(
-    x = NULL,
-    y = "Experimental ΔΔG (kcal/mol)",
+  add_target_label() |>
+  plot_ddg_violin(
+    facet_var = "mutation_category",
+    y_label = "Experimental ΔΔG (kcal/mol)",
     title = "Experimental ΔΔG by chain"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "none")
+  )
 ```
 
 ## Alanine mutation counts by assay pH
 
 For single-point mutations to alanine, we count the measurements at
 low and high assay pH for each starting amino acid. For example,
-W → A is counted under W. We state the pH cutoff alongside the table
+W to A is counted under W. We state the pH cutoff alongside the table
 and report how many measurements are missing assay pH. This lets us
 see which starting amino acids have enough measurements in both pH
 groups for a later comparison.
 
 Some assay pH values are written as ranges or pairs (e.g. `7.3_7.5` or
 `6.2 & 7.0`). We use the first number in each value. We use pH 7.4
-(physiological pH) as the cutoff: pH ≤ 7.4 is low and pH > 7.4 is high.
+(physiological pH) as the cutoff: pH 7.4 or lower is low and above 7.4
+is high.
 
 ```{r}
 ala_ph <- dat_aug |>
