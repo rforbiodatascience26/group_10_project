@@ -15,7 +15,7 @@ library("here")
 ## Load dataset
 
 ```{r}
-ab_bind = read_csv(here('data/01_dat_load_experimental.csv')) |>
+ab_bind <- read_csv(here('data/01_dat_load_experimental.csv')) |>
   select(
     pdb = `#PDB`,
     partners = `Partners(A_B)`,
@@ -32,7 +32,7 @@ ab_bind
 
 ## Drop rows with multiple mutations, insertions or deletions
 In our analysis we will focus on single point mutations for the sake of simplicity.
-Point mutations always consist of 
+Point mutations always consist of
 1) a single chain letter
 2) a comma separator
 3) a single-letter uppercase amino acid code
@@ -74,8 +74,6 @@ After manually visiting these PDB entries on https://rcsb.org we find that the f
 - 3K2M
 - HM_1KTZ
 
-These PDBs contain only constant regions of antibodies which do not contain the CDR regions that form the typical binding interface of an antibody, so we also exclude these:
-
 These PDBs contain antibodies, but the binding interface is at the Fc region and not at the CDR region which is the region that determines antigen binding:
 - 1T83
 - 3WJJ
@@ -87,13 +85,9 @@ heavy: chain B
 light: chain C
 antigen: chain A
 
-Note that PDB 1DVF contains an _antiidiotopic_ antibody, which means it's an antibody that binds to another antibody.
-For this structure, we both add a row where antibody 1 is the antibody and antibody 2 is treated as the antigen and vice versa.
-In this one, chain C and D are one antibody and chain A and B are one antibody
-heavy 1: chain B
-light 1: chain A
-heavy 2: chain D
-light 2: chain C
+Note that PDB 1DVF contains an _antiidiotopic_ antibody, which means it's an antibody that binds to the antigen-binding region of another antibody.
+For this structure, it would therefore simultaneously be valid to interpret antibody chains BA as the antigen or antibody chains DC as the antigen.
+To avoid double-counting measurements, we arbitrarily decide to use chains BA as our heavy and light chain for this complex and chains DC as the antigen.
 
 ```{r}
 ab_bind_hl <- ab_bind |>
@@ -104,41 +98,20 @@ ab_bind_3nps <- ab_bind |>
   filter(pdb == "3NPS") |>
   mutate(heavy = 'B', light = 'C')
 
-ab_bind_1dvf_1 <- ab_bind |>
+ab_bind_1dvf <- ab_bind |>
   filter(pdb == "1DVF") |>
   mutate(heavy = 'B', light = 'A')
-
-ab_bind_1dvf_2 <- ab_bind |>
-  filter(pdb == "1DVF") |>
-  mutate(heavy = 'D', light = 'C')
 
 ab_bind_ab <- bind_rows(
   ab_bind_hl,
   ab_bind_3nps,
-  ab_bind_1dvf_1,
-  ab_bind_1dvf_2
+  ab_bind_1dvf,
 )
 ab_bind_ab
 ```
 
-## Rename light and heavy chains
-```{r}
-ab_bind_ab <- ab_bind_ab |>
-  mutate(
-    mutation = str_replace_all(mutation, str_c("(^|,)", heavy, ":"), "\\1H:"),
-    mutation = str_replace_all(mutation, str_c("(^|,)", light, ":"), "\\1L:"),
-    partners = str_replace_all(partners, heavy, "H"),
-    partners = str_replace_all(partners, light, "L"),
-    partners = str_replace_all(partners, "LH", "HL"),
-    antigen_chains = str_remove(partners, "HL_|_HL")
-  ) |>
-  select(!c(heavy, light, partners))
-
-ab_bind_ab
-```
-
 ## Join with computational data
-Some of the computational methods have duplicate predictions, so we take the mean in those cases
+Some of the computational methods have duplicate predictions, so we take the mean in those cases.
 ```{r}
 comp <- read_csv(
   here("data", "01_dat_load_computational.csv"),
@@ -156,7 +129,7 @@ comp <- read_csv(
       method == "statium_expt_comp" ~ "statium"
     )
   ) |>
-  summarise(comp = mean(comp), .by = c(method, pdb, mutation)) |>
+  summarise(comp = mean(comp), .by = c(method, pdb, mutation), na.rm = TRUE) |>
   pivot_wider(names_from = method, values_from = comp) |>
   rename(
     d_studio_ddg = d_studio,
@@ -169,6 +142,22 @@ comp <- read_csv(
 
 ab_bind_ab <- ab_bind_ab |>
   left_join(comp, by = c("pdb", "mutation"))
+
+ab_bind_ab
+```
+
+## Rename light and heavy chains
+```{r}
+ab_bind_ab <- ab_bind_ab |>
+  mutate(
+    mutation = str_replace_all(mutation, str_c("(^|,)", heavy, ":"), "\\1H:"),
+    mutation = str_replace_all(mutation, str_c("(^|,)", light, ":"), "\\1L:"),
+    partners = str_replace_all(partners, heavy, "H"),
+    partners = str_replace_all(partners, light, "L"),
+    partners = str_replace_all(partners, "LH", "HL"),
+    antigen_chains = str_remove(partners, "HL_|_HL")
+  ) |>
+  select(!c(heavy, light, partners))
 
 ab_bind_ab
 ```
