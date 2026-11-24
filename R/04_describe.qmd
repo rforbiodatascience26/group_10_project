@@ -6,7 +6,7 @@ format: html
 
 ## Setup
 
-```{r}
+```{r, message=FALSE}
 library("tidyverse")
 library("here")
 source(here("R", "99_proj_func.R"))
@@ -17,7 +17,7 @@ source(here("R", "99_proj_func.R"))
 We load the augmented dataset from the previous step. We use
 `mutation_category` to group mutations by where they are in the complex.
 
-```{r}
+```{r, message=FALSE}
 dat_aug <- read_csv(
   here("data", "03_dat_aug.csv"),
   col_types = cols(
