@@ -75,7 +75,7 @@ and structures.
 
 model_pooled <- lm(
   ddg ~ type_from,
-  data = dat_alanine_model
+  data = dat_alanine
 )
 
 anova(model_pooled)
@@ -97,12 +97,12 @@ improves the fit.
 
 model_without_chemistry <- lm(
   ddg ~ mutation_category + pdb,
-  data = dat_alanine_model
+  data = dat_alanine
 )
 
 model_adjusted <- lm(
   ddg ~ type_from + mutation_category + pdb,
-  data = dat_alanine_model
+  data = dat_alanine
 )
 
 anova(model_without_chemistry, model_adjusted)
@@ -178,7 +178,7 @@ with few or no rows gives us little information about that comparison.
 ```{r}
 #| label: count-mutations-by-location
 
-dat_alanine_model |>
+dat_alanine |>
   count(mutation_category, type_from) |>
   pivot_wider(
     names_from = type_from,
@@ -198,7 +198,7 @@ what we can say about those groups on the antibody chains.
 
 model_location_interaction <- lm(
   ddg ~ type_from * mutation_category + pdb,
-  data = dat_alanine_model
+  data = dat_alanine
 )
 
 anova(model_adjusted, model_location_interaction)
@@ -216,7 +216,7 @@ scale in all three panels so the patterns are easy to compare.
 ```{r}
 #| label: fig-alanine-chemistry-by-location
 
-dat_alanine_model |>
+dat_alanine |>
   ggplot(aes(x = type_from, y = ddg, fill = type_from)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_boxplot(outlier.shape = NA, alpha = 0.7) +
@@ -254,7 +254,7 @@ structure.
 ```{r}
 #| label: count-groups-by-structure
 
-dat_alanine_model |>
+dat_alanine |>
   distinct(pdb, type_from) |>
   count(pdb, name = "n_chemical_groups") |>
   count(n_chemical_groups, name = "n_structure_ids")
@@ -270,7 +270,7 @@ some of the groups.
 
 model_structure_interaction <- lm(
   ddg ~ type_from * pdb + mutation_category,
-  data = dat_alanine_model
+  data = dat_alanine
 )
 
 anova(model_adjusted, model_structure_interaction)
@@ -293,7 +293,7 @@ the aromatic group had the higher median ΔΔG in that structure.
 #| fig-width: 8
 #| fig-height: 5
 
-structure_comparison <- dat_alanine_model |>
+structure_comparison <- dat_alanine |>
   filter(type_from %in% c("aromatic", "polar")) |>
   group_by(pdb, type_from) |>
   summarise(
