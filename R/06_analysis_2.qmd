@@ -124,7 +124,7 @@ anova(model_pooled)
 ```
 
 Mean ΔΔG differed between at least two chemical groups in the pooled
-analysis (`F(5, 347) = 5.11, p = 0.000156`).
+analysis (`F(5, 322) = 4.60, p = 0.000455`).
 
 
 ## Which differences remain after adjusting for location and structure?
@@ -153,7 +153,7 @@ anova(model_without_chemistry, model_adjusted)
 ```
 
 Adding chemical group improved the model fit after accounting for
-mutation location and structure (`F(5, 327) = 4.32, p = 0.000814`).
+mutation location and structure (`F(5, 302) = 3.94, p = 0.00177`).
 
 We then compare the chemical groups two at a time in both the pooled and
 adjusted models. We use Holm's method to adjust the p-values within each
@@ -202,11 +202,11 @@ pairwise_comparison
 ```
 
 After accounting for mutation location and structure, two pairs had
-Holm-adjusted p-values below 0.05. Mean $\Delta \Delta G$ was `0.95 kcal/mol` higher
-for aromatic-to-alanine mutations and `0.78 kcal/mol` higher for
+Holm-adjusted p-values below 0.05. Mean $\Delta \Delta G$ was `0.98 kcal/mol` higher
+for aromatic-to-alanine mutations and `0.79 kcal/mol` higher for
 positive-to-alanine mutations, both compared with polar-to-alanine
-mutations. The aromatic–polar difference decreased from `1.23` to
-`0.95 kcal/mol` after adjustment, while the positive–polar difference
+mutations. The aromatic–polar difference decreased from `1.25` to
+`0.98 kcal/mol` after adjustment, while the positive–polar difference
 stayed about the same.
 
 ## Do the differences vary by mutation location?
@@ -232,8 +232,8 @@ dat_alanine |>
 ```
 
 The aromatic and polar groups were represented at all three locations,
-with at least 19 rows per group at each location. The hydrophobic group
-had only one row on the heavy chain and two on the light chain. There
+with at least 17 rows per group at each location. The hydrophobic group
+had no rows on the heavy chain and two on the light chain. There
 were no rows from the negative group on the light chain. This limits
 what we can say about those groups on the antibody chains.
 
@@ -249,7 +249,7 @@ anova(model_adjusted, model_location_interaction)
 ```
 
 Adding the interaction improved the model fit when all rows were
-included (`F(9, 318) = 2.35, p = 0.0139`). This suggests that some
+included (`F(8, 294) = 2.36, p = 0.018`). This suggests that some
 chemical-group differences varied across locations. This overall test
 doesn’t tell us which pairs varied. We use the next plot to look at the
 patterns on the heavy chain, light chain, and antigen.
@@ -321,7 +321,7 @@ anova(model_adjusted, model_structure_interaction)
 ```
 
 We found no clear evidence that the chemical-group differences varied by
-structure pdb (`F(63, 264) = 1.04, p = 0.412`). Since only seven
+structure pdb (`F(63, 239) = 0.96, p = 0.557`). Since only seven
 structures had data for all six groups, some differences were hard to
 compare across structures. In the next plot, we look at the
 aromatic–polar difference in the structures where both groups were
@@ -373,16 +373,16 @@ medians, and the plot does not adjust for mutation location.
 
 ## What did we find?
 
-After accounting for mutation location and structure, mean $\Delta \Delta G$ was 0.95
-kcal/mol higher for aromatic-to-alanine mutations and 0.78 kcal/mol
+After accounting for mutation location and structure, mean $\Delta \Delta G$ was 0.98
+kcal/mol higher for aromatic-to-alanine mutations and 0.79 kcal/mol
 higher for positive-to-alanine mutations than for polar-to-alanine
-mutations (Holm-adjusted `p = 0.000702` and `p = 0.0175`).
+mutations (Holm-adjusted `p = 0.00142` and `p = 0.0282`).
 
 With all rows included, the differences varied by mutation location (`p
-= 0.0139`). Both pairs differed on the heavy chain, and only
+= 0.018`). Both pairs differed on the heavy chain, and only
 positive–polar differed on the light chain. The direct comparisons
 between locations were inconclusive. We found no clear evidence that the
-differences varied by structure (`p = 0.412`). For the aromatic and
+differences varied by structure (`p = 0.557`). For the aromatic and
 positive groups, the capped values can only push the true mean up, so the
 reported differences relative to polar are, if anything, understated.
 
