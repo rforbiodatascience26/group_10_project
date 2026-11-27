@@ -7,9 +7,14 @@ format: html
 We use this file to run the whole project in one go. First, we load, clean and prepare the data. Then we describe the dataset and run our two analyses.
 
 ```{r}
-here::i_am("R/00_all.qmd")
+library(tidyverse)
+library(quarto)
+library(here)
 
-# List the files in the order we want to run them.
+
+i_am("R/00_all.qmd")
+
+# List the files in the order we want to run them
 project_files <- c(
   "01_load.qmd",
   "02_clean.qmd",
@@ -19,12 +24,20 @@ project_files <- c(
   "06_analysis_2.qmd"
 )
 
-# Render each file and wait for it to finish before starting the next.
-purrr::walk(project_files, function(project_file) {
-  quarto::quarto_render(
-    input = here::here("R", project_file),
+# Render one file at a time
+walk(project_files, function(project_file) {
+  quarto_render(
+    input = here("R", project_file),
     quarto_args = c("--output-dir", "../results"),
     as_job = FALSE
   )
 })
+
+# Render to 00_all.html
+quarto_render(
+  input = here("R", "00_all.qmd"),
+  execute = FALSE,
+  quarto_args = c("--output-dir", "../results"),
+  as_job = FALSE
+)
 ```

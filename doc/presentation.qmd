@@ -1,161 +1,324 @@
 ---
 pagetitle: "How do mutations change binding?"
-author: "Luis Sebastian Galán, Laura Grenaa Jensen, Taniya Dey and hota Kanishka Rao"
+author: "Luis Sebastian Galán, Laura Grenaa Jensen, Taniya Dey and Thota Kanishka Rao"
 format:
   revealjs:
+    theme: simple
+    width: 1440
+    height: 810
+    margin: 0.065
+    center: false
+    auto-stretch: false
     slide-number: true
     embed-resources: true
+    transition: none
+    include-in-header:
+      - text: |
+          <style>
+            :root {
+              --r-background-color: #f7f7f3;
+              --r-main-font: "Aptos", "Helvetica Neue", Arial, sans-serif;
+              --r-heading-font: "Aptos", "Helvetica Neue", Arial, sans-serif;
+              --r-main-color: #17283c;
+              --r-heading-color: #17283c;
+              --r-link-color: #006c63;
+              --r-main-font-size: 30px;
+              --r-heading2-size: 1.7em;
+              --r-heading3-size: 1.1em;
+            }
+            .reveal .slides { text-align: left; }
+            .reveal .slides section { box-sizing: border-box; }
+            .reveal .slides h2 {
+              max-width: 1250px; margin: 0 0 28px; line-height: 1.05;
+              letter-spacing: -0.033em; font-weight: 740;
+            }
+            .reveal .slides .subhead { margin: 0 0 13px; font-weight: 700; font-size: 1.1em; line-height: 1.15; }
+            .reveal .slides p { margin: 0 0 15px; line-height: 1.25; }
+            .reveal .slides p:last-child { margin-bottom: 0; }
+            .reveal .opening { padding-top: 50px; }
+            .reveal .closing { padding-top: 106px; }
+            .reveal .text-slide { padding-top: 76px; }
+            .reveal .text-slide h2 { margin-bottom: 58px; }
+            .reveal .text-slide .question p, .reveal .text-slide .step p { font-size: 1.07em; }
+            .reveal .opening h2 { font-size: 2.9em; max-width: 1140px; margin: 18px 0 46px; }
+            .reveal .closing h2 { font-size: 2.25em; margin: 22px 0 43px; }
+            .reveal .opening, .reveal .closing { color: #f7f7f3; }
+            .reveal .opening h2, .reveal .opening .subhead, .reveal .closing h2,
+            .reveal .closing .subhead { color: #f7f7f3; }
+            .reveal .opening strong, .reveal .closing strong { color: #85e1ca; }
+            .reveal .two-up, .reveal .three-up, .reveal .figure-layout {
+              display: grid; align-items: start; gap: 44px; margin: 0;
+            }
+            .reveal .two-up { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .reveal .three-up { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .reveal .step { position: relative; }
+            .reveal .step:not(:last-child)::after {
+              content: "→"; position: absolute; right: -34px; top: 10px; color: #006c63;
+              font-size: 0.86em;
+            }
+            .reveal .figure-layout { grid-template-columns: minmax(0, 2.25fr) minmax(0, 1fr); gap: 36px; }
+            .reveal .question, .reveal .stat, .reveal .step, .reveal .result {
+              border-top: 3px solid #148273; padding-top: 17px;
+            }
+            .reveal .opening .question, .reveal .closing .question { border-color: #85e1ca; }
+            .reveal .question p, .reveal .step p, .reveal .result p { font-size: 0.93em; }
+            .reveal .opening .credits { margin-top: 28px; color: #d6e1e9; font-size: 0.73em; }
+            .reveal .opening .sign { margin-top: 34px; font-size: 0.85em; }
+            .reveal .stat strong, .reveal .result .value {
+              display: block; color: #006c63; font-size: 2.3em; font-weight: 750;
+              line-height: 1.05; letter-spacing: -0.05em; margin-bottom: 10px;
+            }
+            .reveal .result .value { font-size: 3.15em; }
+            .reveal .unit { color: #37556b; font-size: 0.43em; font-weight: 550; letter-spacing: 0; }
+            .reveal .muted, .reveal .source { color: #486173; }
+            .reveal .muted { font-size: 0.78em; }
+            .reveal .source { margin-top: 42px; font-size: 0.72em; }
+            .reveal .note-line { border-top: 1px solid #ced8dc; padding-top: 16px; margin-top: 27px; }
+            .reveal .figure { min-width: 0; margin: 0; text-align: center; }
+            .reveal .figure p { margin: 0; }
+            .reveal .figure img {
+              box-sizing: border-box; display: block; width: 100%; height: 565px;
+              max-width: none; max-height: none; object-fit: contain;
+              margin: 0; padding: 7px; background: #fff;
+              border: 1px solid #d7e0df; box-shadow: none;
+            }
+            .reveal .figure figcaption { display: none; }
+            .reveal .wide-figure img { height: 570px; }
+            .reveal .describe-plot img { height: 530px; }
+            .reveal .describe-plot .figure-note { text-align: left; }
+            .reveal .results-table table { width: 100%; font-size: 0.77em; margin: 0 0 15px; }
+            .reveal .results-table th, .reveal .results-table td { padding: 8px 9px; }
+            .reveal .results-table .muted { font-size: 0.71em; }
+            .reveal .results-table .note-line { margin-top: 15px; padding-top: 12px; }
+            .reveal .capped { margin-top: 55px; }
+            .reveal .figure-aside { border-top: 3px solid #148273; padding-top: 14px; }
+            .reveal .figure-aside p { font-size: 0.85em; }
+            .reveal .figure-aside strong { color: #006c63; }
+            .reveal .figure-aside .value { font-size: 1.65em; font-weight: 730; color: #006c63; line-height: 1.12; }
+            .reveal .figure-note { margin-top: 13px; }
+          </style>
 ---
 
-## How do mutations change binding?
+## How do mutations change binding? {.opening background-color="#17283c"}
 
-**Group 10 · AB-Bind**
+::: {.two-up}
+::: {.question}
+<div class="subhead" role="heading" aria-level="3">Can we predict the ranking?</div>
 
-- How well do computational methods rank mutations by their effect on binding?
-- Which starting residues show the biggest change when replaced with alanine?
-
-**Positive ΔΔG means weaker binding.**
-
-::: {.notes}
-**Thota · 0:55**
-
-We looked at how mutations change binding in antibody complexes. A positive experimental ΔΔG means binding got weaker after the mutation. We asked two questions. First, if we only had computational predictions, would they put the mutations in roughly the same order as the experiment? Second, looking at the experimental measurements, what happens when we replace different amino acids with alanine? Luis will come back to why we grouped the starting residues by chemistry.
+Do computational scores put mutations in roughly the same order as the experiment?
 :::
 
-## Materials — What’s in AB-Bind?
+::: {.question}
+<div class="subhead" role="heading" aria-level="3">What happens when we substitute alanine?</div>
 
-- 1,101 experimental mutation records across 32 complexes.
-- Predictions from six computational methods.
-- PDB IDs and mutation labels to link the two sources.
-
-[AB-Bind paper](https://pmc.ncbi.nlm.nih.gov/articles/PMC4815335/) · [Source data](https://github.com/sarahsirin/AB-Bind-Database)
-
-::: {.notes}
-**Thota · 1:05**
-
-AB-Bind gives us experimental measurements and computational predictions. The experimental file also tells us which complex and mutation each measurement belongs to. The prediction files give scores for those mutations, although coverage can differ by method. The raw data includes cases where several amino acids were changed together. That matters for the alanine question because we want to link each result to a single starting residue. I’ll hand over to Luis to explain how we prepared the files.
+Which starting residues tend to give the largest changes in binding?
+:::
 :::
 
-## Methods — From raw files to analysis data
-
-```{mermaid}
-flowchart LR
-    A["Experimental data"] --> B["Keep single substitutions in selected complexes"]
-    C["Prediction files"] --> D["Average duplicate predictions per method"]
-    B --> E["Join by PDB ID and mutation"]
-    D --> E
-    E --> F["Standardise chains and add mutation features"]
-```
-
-::: {.notes}
-**Luis · 0:45**
-
-We started with the experimental table and the prediction files. On the experimental side we kept single substitutions in the complexes we selected. For predictions that appeared more than once for the same method and mutation, we took their mean. We joined the files using both the PDB ID and the mutation label, because the same label can occur in different complexes. We then standardised chain names and added the mutation features we needed later.
+::: {.sign}
+**Positive ΔΔG means weaker binding after mutation.**
 :::
 
-## Methods — Two questions, two datasets
+::: {.credits}
+Group 10 · AB-Bind
 
-| Prediction comparison | Alanine analysis |
-|---|---|
-| Same measurements for all six methods | Experimental measurements for substitutions to alanine |
-| Spearman correlation and one linear fit per method | Mean ΔΔG by starting residue, then by chemical group |
-| Compare ranking and how much variation the fits explain | Account for mutation location and PDB ID |
-
-::: {.notes}
-**Luis · 0:45**
-
-For Analysis 1 we used the same subset for all methods so differences in coverage would not decide the ranking. We looked at Spearman correlation for ranking and used the linear fits to see how much variation each method accounted for. For Analysis 2 we only needed the experimental alanine measurements. We looked at individual residues first, then compared the chemical groups while accounting for location and complex.
+Luis Sebastian Galán, Laura Grenaa Jensen, Taniya Dey and Thota Kanishka Rao
 :::
 
-## Describe — What did the data look like?
+
+## Materials · What’s in AB-Bind? {.text-slide}
+
+::: {.three-up}
+::: {.stat}
+**1,101**
+
+Experimental mutation records
+:::
+
+::: {.stat}
+**32**
+
+Complexes in the source dataset
+:::
+
+::: {.stat}
+**6**
+
+Computational methods in our comparison
+:::
+:::
+
+::: {.note-line}
+Each record links a mutation to a complex. Some records contain multiple substitutions.
+:::
+
+::: {.source}
+[Sirin et al., *Protein Science* (2016)](https://pubmed.ncbi.nlm.nih.gov/26473627/) · [AB-Bind source data](https://github.com/sarahsirin/AB-Bind-Database)
+:::
+
+
+## Methods · From raw files to analysis data {.text-slide}
+
+::: {.three-up}
+::: {.step}
+<div class="subhead" role="heading" aria-level="3">Select mutations</div>
+
+Keep single substitutions in the selected complexes.
+:::
+
+::: {.step}
+<div class="subhead" role="heading" aria-level="3">Match predictions</div>
+
+Average duplicate predictions within each method. Join by **PDB ID and mutation label**.
+:::
+
+::: {.step}
+<div class="subhead" role="heading" aria-level="3">Add mutation features</div>
+
+Standardise chain labels and identify mutation location, alanine substitutions, and starting-residue chemistry.
+:::
+:::
+
+::: {.note-line .capped}
+**+8 kcal/mol is a capped value.** We kept these measurements at the recorded cap.
+:::
+
+
+## Methods · How did we analyse the data? {.text-slide}
+
+::: {.two-up}
+::: {.question}
+<div class="subhead" role="heading" aria-level="3">1 · Prediction performance</div>
+
+- **Spearman correlation** to compare predicted and experimental rankings
+- **Linear regression and R²** to assess how much variation each method explained
+
+We used the same measurements for all six methods.
+:::
+
+::: {.question}
+<div class="subhead" role="heading" aria-level="3">2 · Alanine substitutions</div>
+
+- **Means and 95% confidence intervals** by starting amino acid
+- **One-way ANOVA** to compare chemical groups
+- **Nested-model F-tests** to assess chemistry after adjustment and test interactions
+- **Pairwise comparisons** with Holm-adjusted p-values
+:::
+:::
+
+
+## Describe · What did the data look like?
 
 **542 measurements · 540 variants · 23 complexes**
 
 ::: {.r-stack}
 
-![](../results/04_plot_alanine_vs_other.png){{.fragment .fade-out data-fragment-index="0" height="480px"}}
+::: {.figure .wide-figure .describe-plot .fragment .fade-out data-fragment-index="0"}
+![Violin plots comparing alanine with other substitutions for the experiment and six prediction methods.](../results/04_1_plot_alanine_vs_other.png)
 
-![](../results/04_plot_ddg_by_chain.png){.fragment .current-visible data-fragment-index="0" width="94%"}
+::: {.muted .figure-note}
+**328** substitutions to alanine · **214** to other amino acids
+:::
+:::
+
+::: {.figure .wide-figure .describe-plot .fragment .current-visible data-fragment-index="0"}
+![Experimental ΔΔG distributions for alanine and other substitutions on the heavy chain, light chain and antigen.](../results/04_2_plot_ddg_by_chain.png)
+
+::: {.muted .figure-note}
+On the antigen, the alanine median was higher · **197** to alanine · **40** to other amino acids
+:::
+:::
 
 :::
 
-::: {.notes}
-**Laura · 1:10**
+## Results 1 · Predictions showed wide scatter
 
-**First plot · 25 seconds**
+::: {.figure .wide-figure}
+![Six scatterplots showing predicted against experimental ΔΔG with fitted lines.](../results/05_1_plot_predicted_vs_experimental.png)
+:::
 
-We first compared mutations to alanine with mutations to other amino
-acids. Each panel shows the same 328 alanine and 214 other measurements.
-Start with the experimental panel, then point out that the predicted
-distributions also vary between methods.
-
-**Click to show the chain plot · 45 seconds**
-
-Then we split the experimental values by mutation location. On the
-antigen, the median was higher for alanine substitutions. We also had
-more alanine measurements there, 197 compared with 40 for other
-substitutions. This gives us an overview of the data before Taniya
-shows how well the predictions matched the experiments for individual
-mutations.
+::: {.muted .figure-note}
+Each panel is one prediction method. In the experimental data, 26 values were recorded at +8 kcal/mol.
 :::
 
 
-## Analysis 1 — Predicted vs. experimental ΔΔG
+## Results 1 · The methods ranked mutations weakly
 
-![](../results/05_1_plot_predicted_vs_experimental.png){width=77%}
-
-::: {.notes}
-**Taniya · 1:10**
-
-Each panel shows one computational method, and each point compares a prediction with the experimental measurement for that mutation. Look at the spread around the fitted lines. Even when the slope is positive, the values can still be quite scattered. The row at +8 is a group of 26 values recorded at the same point in the original data.
+::: {.figure-layout}
+::: {.figure}
+![Spearman correlations with 95% confidence intervals for the six prediction methods.](../results/05_2_plot_spearman.png)
 :::
 
-## Analysis 1 — How well did the methods rank mutations?
+::: {.figure-aside}
+::: {.value}
+0.32
+:::
+Discovery Studio had the highest observed Spearman correlation. FoldX followed at **0.27**.
 
-![](../results/05_1_plot_spearman.png){width=80%}
-
-**The methods gave a rough ranking of mutation effects.**
-
-::: {.notes}
-**Taniya · 1:20**
-
-Spearman correlation tells us whether higher predicted effects tend to go with higher experimental effects. Discovery Studio had the highest observed correlation, about 0.32, followed by FoldX at about 0.27. The correlations were still weak. The highest R squared was about 7%, for FoldX. The intervals show the uncertainty around each estimate. We did not run a direct test comparing the correlations between methods, so keep the claim to their observed ranking. The first analysis looked at how well we can predict the experimental measurements. Laura will now take us through what the measured alanine substitutions show.
+::: {.note-line .muted}
+The highest observed R² was about 7% (FoldX).
+:::
+:::
 :::
 
-## Analysis 2.1 — Which starting residues had higher ΔΔG?
+## Results 2.1 · Tryptophan and tyrosine had high mean ΔΔG
 
-PLOT HERE
-
-Dot size shows the number of measurements. Colour shows the chemical group.
-
-::: {.notes}
-**Laura · 1:20**
-
-Here we only look at substitutions to alanine. Each point is the mean for one starting amino acid. The lines show 95% confidence intervals where we have more than one measurement. A residue can be high on the plot because of a single large value, so look at the dot size before interpreting the ranking. Cysteine had the highest observed mean, but it was measured once. Tryptophan averaged 2.52 across 12 measurements, while tyrosine averaged 1.86 across 47. That leads into the next question. Do we still see differences when we compare chemical groups and account for where the mutations were measured?
+::: {.figure-layout}
+::: {.figure}
+![Mean experimental ΔΔG by starting amino acid for alanine substitutions, with confidence intervals and point sizes showing measurement counts.](../results/06_1_plot_ala_mean_ddg.png)
 :::
 
-## Analysis 2.2 — Did chemical group help explain ΔΔG?
+::: {.figure-aside}
+**Tryptophan** · 2.52 kcal/mol (n = 12)
 
-**Model comparison:** Add chemical group to a model with mutation location and PDB ID.
+**Tyrosine** · 1.86 kcal/mol (n = 47)
 
-| Comparison | Adjusted difference | Holm-adjusted p |
-|---|---:|---:|
-| Aromatic − polar | +0.98 kcal/mol | 0.0014 |
-| Positive − polar | +0.79 kcal/mol | 0.028 |
-
-::: {.notes}
-**Luis · 1:00**
-
-Both models included mutation location and PDB ID. We added the starting residue’s chemical group to the second model and checked whether the fit improved. The pairwise comparisons show which groups differed and by how much. Aromatic-to-alanine substitutions averaged about 0.98 kcal/mol higher than polar-to-alanine substitutions after adjustment. The positive–polar difference was about 0.79 kcal/mol. Adding chemical group accounted for roughly 6% of the variation left after accounting for chain location and PDB ID.
+::: {.note-line .muted}
+Cysteine had the highest observed mean, based on one measurement.
+:::
+:::
 :::
 
-## What did we learn?
 
-- Computational scores gave a rough ranking of mutation effects.
-- Starting-residue chemistry helped explain some of the measured differences for alanine substitutions.
+## Results 2.2 · Chemical groups differed after adjustment
 
-::: {.notes}
-**Thota · 0:30**
-
-The computational methods picked up some of the pattern, but the rankings were weak. In the alanine analysis, chemical group helped explain some of the differences after we accounted for mutation location and PDB ID. The aromatic–polar comparison was the clearest example. We would be more cautious about individual residues that had very few measurements.
+::: {.figure-layout}
+::: {.figure}
+![Experimental ΔΔG for alanine substitutions by chemical group, split by mutation location.](../results/06_2_plot_ala_chemistry_by_location.png)
 :::
+
+::: {.figure-aside .results-table}
+<div class="subhead" role="heading" aria-level="3">Adjusted differences</div>
+
+| Compared with polar | ΔΔG difference | Holm p |
+|:--------------------|---------------:|-------:|
+| Aromatic | +0.98 | 0.0014 |
+| Positive | +0.79 | 0.028 |
+
+::: {.muted}
+Mean differences in kcal/mol, adjusted for chain location and PDB ID.
+:::
+
+::: {.note-line .muted}
+Adding chemistry improved model fit (p = 0.0018).
+:::
+:::
+:::
+
+
+## What did we learn? {.closing background-color="#17283c"}
+
+::: {.two-up}
+::: {.question}
+<div class="subhead" role="heading" aria-level="3">Can we predict the ranking?</div>
+
+The six methods picked up some of the pattern. Even the highest observed rank correlation was only **0.32**.
+:::
+
+::: {.question}
+<div class="subhead" role="heading" aria-level="3">What happens when we substitute alanine?</div>
+
+Aromatic-to-alanine substitutions had about **1 kcal/mol higher mean ΔΔG** than polar-to-alanine substitutions after adjustment.
+:::
+:::
+

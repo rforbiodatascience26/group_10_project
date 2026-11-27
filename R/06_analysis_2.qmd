@@ -4,6 +4,21 @@ author: "Luis Sebastian Galán, Laura Grenaa Jensen, Taniya Dey and Thota Kanish
 format: html
 ---
 
+## Setup
+
+```{r}
+library("tidyverse")
+library("here")
+
+# Create the results folder if it doesn't exist.
+results_dir <- here("results")
+
+if (!dir.exists(results_dir)) {
+  dir.create(results_dir)
+}
+```
+
+
 ## What are we looking at?
 
 We want to see which types of amino acids show the biggest changes in
@@ -22,9 +37,6 @@ location, and structure pdb so we can use the same rows in every model.
 
 ```{r, message=FALSE}
 #| label: select-alanine-mutations
-
-library("tidyverse")
-library("here")
 
 dat_aug <- read_csv(here("data", "03_dat_aug.csv"))
 
@@ -81,10 +93,11 @@ only one measurement are shown as a point without an interval.
 
 ```{r}
 #| label: fig-alanine-by-amino-acid
+#| fig-cap: "Mean experimental ΔΔG for alanine substitutions by starting amino acid. Bars show 95% confidence intervals, and point size indicates the number of measurements."
 #| fig-width: 9
 #| fig-height: 6
 
-alanine_summary |>
+alanine_plot <- alanine_summary |>
   mutate(mut_from = fct_reorder(mut_from, mean_ddg)) |>
   ggplot(aes(x = mean_ddg, y = mut_from, colour = type_from)) +
   geom_vline(xintercept = 0, linetype = "dashed", colour = "grey60") +
@@ -104,6 +117,18 @@ alanine_summary |>
   ) +
   theme_minimal() +
   theme(legend.position = "bottom")
+
+alanine_plot
+
+# Save a copy in the results folder
+ggsave(
+  filename = here("results", "06_1_plot_ala_mean_ddg.png"),
+  plot = alanine_plot,
+  width = 9,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
 ```
 
 
@@ -259,8 +284,11 @@ scale in all three panels so the patterns are easy to compare.
 
 ```{r}
 #| label: fig-alanine-chemistry-by-location
+#| fig-cap: "Experimental ΔΔG for alanine substitutions by chemical group and mutation location. Each point shows one measurement."
+#| fig-width: 9
+#| fig-height: 8
 
-dat_alanine |>
+alanine_location_plot <- dat_alanine |>
   ggplot(aes(x = type_from, y = ddg, fill = type_from)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_boxplot(outlier.shape = NA, alpha = 0.7) +
@@ -280,6 +308,19 @@ dat_alanine |>
   ) +
   theme_minimal() +
   theme(legend.position = "none")
+
+
+alanine_location_plot
+
+# Save a copy in the results folder.
+ggsave(
+  filename = here("results", "06_2_plot_ala_chemistry_by_location.png"),
+  plot = alanine_location_plot,
+  width = 9,
+  height = 8,
+  units = "in",
+  dpi = 300
+)
 ```
 
 The aromatic group had a higher observed median $\Delta \Delta G$ than the polar group
@@ -327,49 +368,6 @@ compare across structures. In the next plot, we look at the
 aromatic–polar difference in the structures where both groups were
 tested.
 
-We use aromatic and polar residues as an example in the plot below. For
-each structure with both groups, we subtract the observed polar median
-from the observed aromatic median. A point to the right of zero means
-the aromatic group had the higher median $\Delta \Delta G$ in that structure.
-
-```{r}
-#| label: fig-aromatic-polar-by-structure
-#| fig-width: 8
-#| fig-height: 5
-
-structure_comparison <- dat_alanine |>
-  filter(type_from %in% c("aromatic", "polar")) |>
-  group_by(pdb, type_from) |>
-  summarise(
-    median_ddg = median(ddg),
-    .groups = "drop"
-  ) |>
-  pivot_wider(
-    names_from = type_from,
-    values_from = median_ddg
-  ) |>
-  drop_na(aromatic, polar) |>
-  mutate(median_difference = aromatic - polar)
-
-structure_comparison |>
-  ggplot(aes(
-    x = median_difference,
-    y = fct_reorder(pdb, median_difference)
-  )) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_point() +
-  labs(
-    x = "Aromatic median − polar median ΔΔG (kcal/mol)",
-    y = "Structure pdb"
-  ) +
-  theme_minimal()
-```
-
-Of the 15 structure IDs with both groups, 12 had a higher median $\Delta \Delta G$ for
-aromatic-to-alanine mutations, two had a higher median for
-polar-to-alanine mutations, and one had the same median. The difference
-went in the same direction in most structures. These are observed
-medians, and the plot does not adjust for mutation location.
 
 ## What did we find?
 

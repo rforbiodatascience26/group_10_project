@@ -11,8 +11,12 @@ library("tidyverse")
 library("here")
 source(here("R", "99_proj_func.R"))
 
-# Folder for saved plots
-dir.create(here("results"), showWarnings = FALSE)
+# Create the results folder if it doesn't exist
+results_dir <- here("results")
+
+if (!dir.exists(results_dir)) {
+  dir.create(results_dir)
+}
 ```
 
 ## Load data
@@ -73,7 +77,7 @@ individual points.
 
 ```{r}
 #| label: fig-04-alanine-vs-other
-#| fig-cap: "Experimental and predicted ΔΔG for mutations to alanine vs. other amino acids. Saved as results/04_plot_alanine_vs_other.png."
+#| fig-cap: "Experimental and predicted ΔΔG for mutations to alanine vs. other amino acids."
 #| fig-width: 10
 #| fig-height: 7
 # Keep only variants that have a prediction from every method,
@@ -105,7 +109,7 @@ plot_alanine_vs_other <- ddg_long |>
 plot_alanine_vs_other
 
 ggsave(
-  filename = here("results", "04_plot_alanine_vs_other.png"),
+  filename = here("results", "04_1_plot_alanine_vs_other.png"),
   plot = plot_alanine_vs_other,
   width = 10,
   height = 7,
@@ -123,7 +127,7 @@ compare the distributions between chains.
 
 ```{r}
 #| label: fig-04-ddg-by-chain
-#| fig-cap: "Experimental ΔΔG by chain for mutations to alanine vs. other amino acids. Saved as results/04_plot_ddg_by_chain.png."
+#| fig-cap: "Experimental ΔΔG by chain for mutations to alanine vs. other amino acids."
 #| fig-width: 9
 #| fig-height: 4
 plot_ddg_by_chain <- dat_aug |>
@@ -137,7 +141,7 @@ plot_ddg_by_chain <- dat_aug |>
 plot_ddg_by_chain
 
 ggsave(
-  filename = here("results", "04_plot_ddg_by_chain.png"),
+  filename = here("results", "04_2_plot_ddg_by_chain.png"),
   plot = plot_ddg_by_chain,
   width = 9,
   height = 4,
