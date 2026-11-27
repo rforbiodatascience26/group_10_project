@@ -6,7 +6,7 @@
 | ---- | ---------- | --------------- |
 | Luis Sebastian Galán | s235397 | luisgalan |
 | Laura Grenaa Jensen | s235427 | lauragjensen |
-| Taniya Dey | s263756   | taniyadey0229-rgb |
+| Taniya Dey | s263756 | taniyadey0229-rgb |
 | Thota Kanishka Rao | s263780 | Pikachuuu2503 |
 
 ## Group 10: Exploring Mutation Effects on Protein Binding
@@ -58,7 +58,7 @@ Data files are stored locally in `_raw/` and `data/`.
 
 ### Presentation
 
-[View our presentation](INSERT_DIRECT_HTML_PRESENTATION_LINK)
+[View our presentation](https://rforbiodatascience26.github.io/group_10_project/doc/presentation.html)
 
 ### Use of Generative AI
 
