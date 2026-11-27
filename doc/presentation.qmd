@@ -84,7 +84,8 @@ format:
             }
             .reveal .figure figcaption { display: none; }
             .reveal .wide-figure img { height: 570px; }
-            .reveal .describe-plot img { height: 530px; }
+            .reveal .describe-plot img { height: 485px; }
+            .reveal .wide-figure:not(.describe-plot) img { height: 525px; }
             .reveal .describe-plot .figure-note { text-align: left; }
             .reveal .results-table table { width: 100%; font-size: 0.77em; margin: 0 0 15px; }
             .reveal .results-table th, .reveal .results-table td { padding: 8px 9px; }
@@ -96,6 +97,7 @@ format:
             .reveal .figure-aside strong { color: #006c63; }
             .reveal .figure-aside .value { font-size: 1.65em; font-weight: 730; color: #006c63; line-height: 1.12; }
             .reveal .figure-note { margin-top: 13px; }
+            .reveal .figure-layout .figure img { height: 520px; }
           </style>
 ---
 
@@ -211,6 +213,8 @@ We used the same measurements for all six methods.
 
 **542 measurements · 540 variants · 23 complexes**
 
+ΔΔG tells us how a mutation changes binding. Above 0, binding gets weaker.
+
 ::: {.r-stack}
 
 ::: {.figure .wide-figure .describe-plot .fragment .fade-out data-fragment-index="0"}
@@ -225,13 +229,15 @@ We used the same measurements for all six methods.
 ![Experimental ΔΔG distributions for alanine and other substitutions on the heavy chain, light chain and antigen.](../results/04_2_plot_ddg_by_chain.png)
 
 ::: {.muted .figure-note}
-On the antigen, the alanine median was higher · **197** to alanine · **40** to other amino acids
+Alanine had the higher median on all three chains. Antigen: **197** to alanine, **40** to others.
 :::
 :::
 
 :::
 
 ## Results 1 · Predictions showed wide scatter
+
+With good predictions, the points would sit close to a line. Here they are quite spread out.
 
 ::: {.figure .wide-figure}
 ![Six scatterplots showing predicted against experimental ΔΔG with fitted lines.](../results/05_1_plot_predicted_vs_experimental.png)
@@ -243,6 +249,8 @@ Each panel is one prediction method. In the experimental data, 26 values were re
 
 
 ## Results 1 · The methods ranked mutations weakly
+
+Can the methods put mutations in the right order? Spearman: 1 = perfectly, 0 = no relationship.
 
 ::: {.figure-layout}
 ::: {.figure}
