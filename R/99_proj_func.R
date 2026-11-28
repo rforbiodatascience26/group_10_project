@@ -18,7 +18,9 @@ add_target_label <- function(data) {
 # y_label:   text for the y axis
 # title:     plot title
 # free_y:    TRUE gives each panel its own y axis
-plot_ddg_violin <- function(data, facet_var, y_label, title, free_y = FALSE) {
+# n_col:     number of panel columns (NULL lets ggplot choose)
+plot_ddg_violin <- function(data, facet_var, y_label, title, free_y = FALSE,
+                            n_col = NULL) {
   counts <- data |>
     count(.data[[facet_var]], target)
 
@@ -31,11 +33,13 @@ plot_ddg_violin <- function(data, facet_var, y_label, title, free_y = FALSE) {
       data = counts,
       aes(label = str_c("n = ", n), y = Inf),
       vjust = 1.5,
-      size = 3
+      size = 4
     ) +
     facet_wrap(vars(.data[[facet_var]]),
-               scales = if (free_y) "free_y" else "fixed") +
+               scales = if (free_y) "free_y" else "fixed",
+               ncol = n_col) +
+    scale_y_continuous(expand = expansion(mult = c(0.05, 0.18))) +
     labs(x = NULL, y = y_label, title = title) +
-    theme_minimal() +
+    theme_minimal(base_size = 15) +
     theme(legend.position = "none")
 }

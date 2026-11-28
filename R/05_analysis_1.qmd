@@ -78,8 +78,8 @@ row of points at 8 kcal/mol are the capped values.
 ```{r}
 #| label: fig-05-1-predicted-vs-experimental
 #| fig-cap: "Predicted vs. experimental ΔΔG for each computational method"
-#| fig-width: 10
-#| fig-height: 6
+#| fig-width: 13
+#| fig-height: 5.8
 plot_predicted_vs_experimental <- dat_pred |>
   ggplot(aes(x = predicted_ddg, y = ddg)) +
   geom_point(alpha = 0.3) +
@@ -90,15 +90,15 @@ plot_predicted_vs_experimental <- dat_pred |>
     y = "Experimental ΔΔG (kcal/mol)",
     title = "Predicted vs. experimental ΔΔG for each computational method"
   ) +
-  theme_minimal()
+  theme_minimal(base_size = 15)
 
 plot_predicted_vs_experimental
 
 ggsave(
   filename = here("results", "05_1_plot_predicted_vs_experimental.png"),
   plot = plot_predicted_vs_experimental,
-  width = 10,
-  height = 6,
+  width = 13,
+  height = 5.8,
   dpi = 300
 )
 ```
