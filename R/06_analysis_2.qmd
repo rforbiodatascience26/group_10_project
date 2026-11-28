@@ -52,7 +52,11 @@ dat_alanine <- dat_aug |>
   )
 ```
 
-Four of the 328 measurements are exactly 8 kcal/mol, which in this dataset means the assay could not detect binding weaker than this, so the true $\Delta \Delta G$ is ≥ 8. All four are aromatic (W, Y) or positive (R, H) residues. We keep these values as 8, which means the mean estimates for those two groups are lower bounds for the true mean.
+Four of the 328 measurements are exactly 8 kcal/mol, which in this dataset means
+the assay could not detect binding weaker than this, so the true $\Delta \Delta G$
+is ≥ 8. All four are aromatic (W, Y) or positive (R, H) residues. We keep these 
+values as 8, which means the mean estimates for those two groups are lower bounds
+for the true mean.
 
 ## Which amino acids had the highest mean $\Delta \Delta G$?
 We start by comparing the mean experimental $\Delta \Delta G$ for each starting
@@ -134,8 +138,10 @@ ggsave(
 
 ## Do the chemical groups differ?
 
-Some amino acids had only a few measurements, so we group the mutations by the chemical properties of the starting amino acid. We start with a one-way ANOVA to test whether mean $\Delta \Delta G$ differs across the chemical groups. At this point we pool mutations from all locations
-and structures.
+Some amino acids had only a few measurements, so we group the mutations by the
+chemical properties of the starting amino acid. We start with a one-way ANOVA to
+test whether mean $\Delta \Delta G$ differs across the chemical groups. At this
+point we pool mutations from all locations and structures.
 
 ```{r}
 #| label: test-pooled-chemical-groups
@@ -227,8 +233,8 @@ pairwise_comparison
 ```
 
 After accounting for mutation location and structure, two pairs had
-Holm-adjusted p-values below 0.05. Mean $\Delta \Delta G$ was `0.98 kcal/mol` higher
-for aromatic-to-alanine mutations and `0.79 kcal/mol` higher for
+Holm-adjusted p-values below 0.05. Mean $\Delta \Delta G$ was `0.98 kcal/mol`
+higher for aromatic-to-alanine mutations and `0.79 kcal/mol` higher for
 positive-to-alanine mutations, both compared with polar-to-alanine
 mutations. The aromatic–polar difference decreased from `1.25` to
 `0.98 kcal/mol` after adjustment, while the positive–polar difference
@@ -323,8 +329,8 @@ ggsave(
 )
 ```
 
-The aromatic group had a higher observed median $\Delta \Delta G$ than the polar group
-in all three panels. The gap looked larger on the heavy chain than on
+The aromatic group had a higher observed median $\Delta \Delta G$ than the polar
+group in all three panels. The gap looked larger on the heavy chain than on
 the light chain. These are the observed values, so we use the plot to
 describe the pattern. A separate comparison would be needed to test
 whether the aromatic–polar gap itself differs between chains.
@@ -333,8 +339,7 @@ whether the aromatic–polar gap itself differs between chains.
 
 We do the same check for structure pdb. We first count how many chemical
 groups are represented in each structure. A structure with only one
-group gives us no direct comparison between groups within that
-structure.
+group gives us no direct comparison between groups within that structure.
 
 ```{r}
 #| label: count-groups-by-structure
@@ -347,7 +352,7 @@ dat_alanine |>
 
 Seven of the 19 structure pdbs had data for all six chemical groups. Two
 had data for only one group, so they could not contribute a
-within-structure comparison. The remaining structures let us compare
+within-structure comparison. The remaining structures let us compare 
 some of the groups.
 
 ```{r}
@@ -371,8 +376,8 @@ tested.
 
 ## What did we find?
 
-After accounting for mutation location and structure, mean $\Delta \Delta G$ was 0.98
-kcal/mol higher for aromatic-to-alanine mutations and 0.79 kcal/mol
+After accounting for mutation location and structure, mean $\Delta \Delta G$ was
+0.98 kcal/mol higher for aromatic-to-alanine mutations and 0.79 kcal/mol
 higher for positive-to-alanine mutations than for polar-to-alanine
 mutations (Holm-adjusted `p = 0.00142` and `p = 0.0282`).
 

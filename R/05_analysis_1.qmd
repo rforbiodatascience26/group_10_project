@@ -46,7 +46,7 @@ dat_pred |>
 ## Capped experimental values
 
 Some mutations weaken binding so much that the change can no longer be
-measured. In AB-Bind, these mutations are given a ΔΔG of exactly
+measured. In AB-Bind, these mutations are given a $\Delta \Delta G$ of exactly
 8 kcal/mol, so a value of 8 really means "8 or more". Before comparing
 the methods, we check how many of these capped values there are and
 where they come from.
@@ -118,7 +118,7 @@ first.
 
 To show how certain each correlation is, we add a 95% confidence
 interval. We use the Fisher z-transformation with the variance
-1.06 / (n - 3), which is the version recommended for Spearman
+$\frac{1.06}{n - 3}$, which is the version recommended for Spearman
 correlations (Fieller, Hartley and Pearson, 1957).
 
 ```{r}
@@ -196,11 +196,11 @@ ggsave(
 ## Conclusion
 
 All six methods point in the right direction: mutations with a higher
-predicted ΔΔG also tend to have a higher experimental ΔΔG, and every
+predicted $\Delta \Delta G$ also tend to have a higher experimental $\Delta \Delta G$, and every
 slope is significant. Still, the predictions are weak. No method
-explains more than 8% of the variation in experimental ΔΔG.
+explains more than 8% of the variation in experimental $\Delta \Delta G$.
 
-Discovery Studio (d_studio) is best at ranking the mutations
+Discovery Studio (`d_studio`) is best at ranking the mutations
 (Spearman 0.32), closely followed by FoldX (0.27). Their confidence
 intervals overlap, so we cannot say that one is clearly better than
 the other. Statium does worst, and its confidence interval almost
