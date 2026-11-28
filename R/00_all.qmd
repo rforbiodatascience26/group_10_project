@@ -4,14 +4,19 @@ author: "Luis Sebastian Galán, Laura Grenaa Jensen, Taniya Dey and hota Kanishk
 format: html
 ---
 
-We use this file to run the whole project in one go. First, we load, clean and prepare the data. Then we describe the dataset and run our two analyses.
+## Setup
 
-```{r}
+```{r, message=FALSE}
 library(tidyverse)
 library(quarto)
 library(here)
+```
 
+## Run the analyses
 
+We use this file to run the whole project in one go. First, we load, clean and prepare the data. Then we describe the dataset and run our two analyses.
+
+```{r}
 i_am("R/00_all.qmd")
 
 # List the files in the order we want to run them
@@ -32,12 +37,4 @@ walk(project_files, function(project_file) {
     as_job = FALSE
   )
 })
-
-# Render to 00_all.html
-quarto_render(
-  input = here("R", "00_all.qmd"),
-  execute = FALSE,
-  quarto_args = c("--output-dir", "../results"),
-  as_job = FALSE
-)
 ```
